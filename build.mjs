@@ -1,0 +1,13 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const projects=JSON.parse(await readFile(new URL('projects.json',import.meta.url),'utf8'));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const repo=p=>`https://github.com/arsenaltj/creative-hub/tree/main/projects/${p.path}`;
+for(const p of projects){if(!/^[\w.-]+$/.test(p.repo))throw Error('Invalid repository');if(p.demo&&p.demo!==`./projects/${p.path}/`)throw Error('Verify demo URL');}
+const art=p=>p.art==='dock'?'<div class="dial" aria-hidden="true"><i>01<br>待介入</i><i>02<br>执行中</i><i>03<br>已完成</i><i>04<br>异常</i></div>':'<div class="pet" aria-hidden="true"><div class="ears"></div><div class="face">• ᴥ •</div><span>今天也一起慢慢来。</span></div>';
+const cards=projects.filter(p=>p.kind!=='archive').map((p,i)=>`<article class="project ${p.art||'code'}"><div class="visual"><span class="serial">EXPERIMENT / 0${i+1}</span>${p.art?art(p):'<div class="type-art" aria-hidden="true">3D<span>MAKE / LEARN / SHARE</span></div>'}<span class="visual-label">${p.demo?'可交互演示':'代码项目'}</span></div><div class="project-body"><p class="eyebrow">${esc(p.label)}</p><h3>${esc(p.name)}</h3><p class="description">${esc(p.description)}</p><p class="note">${esc(p.note)}</p><div class="actions">${p.demo?`<a class="primary" href="${esc(p.demo)}">体验作品 <span>↗</span></a>`:''}<a href="${repo(p)}">查看源码 ↗</a></div></div></article>`).join('');
+const archive=projects.filter(p=>p.kind==='archive').map(p=>`<a href="${repo(p)}"><span>${esc(p.name)}</span><span aria-hidden="true">↗</span></a>`).join('');
+const template=await readFile(new URL('template.html',import.meta.url),'utf8');
+await writeFile(new URL('index.html',import.meta.url),template.replace('<!-- PROJECTS -->',cards).replace('<!-- ARCHIVE -->',archive));
+const lines=projects.map(p=>`| ${p.name} | ${p.demo?'交互原型':p.kind==='archive'?'代码目录':'服务端项目'} | ${p.demo?`[在线演示](https://arsenaltj.github.io/creative-hub/projects/${p.path}/)`:'—'} | [源码](${repo(p)}) |`).join('\n');
+await writeFile(new URL('README.md',import.meta.url),`# 创意实验室 · Creative Hub\n\n👉 [打开统一作品集](https://arsenaltj.github.io/creative-hub/)\n\n统一管理 VibeDock 与栖伴两个演示项目的源码、文档和在线入口。源码位于 projects/vibedock/ 和 projects/qiban/。原独立仓库与演示地址保留为旧版，此后以本仓库为维护入口。\n\n| 项目 | 类型 | 演示 | 源码 |\n|---|---|---|---|\n${lines}\n\n## 如何维护\n\n修改项目时直接编辑 projects/ 对应目录。修改作品介绍时编辑 projects.json，然后运行 node build.mjs，提交 projects.json、index.html 和 README.md。GitHub Pages 从 main 分支根目录自动发布。修改页面设计时编辑 template.html 和 style.css。\n\n- 只包含这两个项目已公开的演示源码。VibeDock 本机 PC 服务端、固件、SDK 和凭证不在本仓库。\n- 在线原型的状态和数据为模拟，不能视为真实硬件或客户端能力已交付。\n- 普通网页访问者只能浏览。自动更新需具备仓库写入权限的开发工具；不要把令牌写入仓库。\n`);
+console.log(`Built ${projects.length} project entries`);

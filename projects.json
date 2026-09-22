@@ -1,0 +1,24 @@
+[
+  {
+    "name": "VibeDock",
+    "kind": "demo",
+    "label": "AI × 硬件",
+    "description": "四个任务，一个圆屏。把 AI 编程进展放在手边，体验任务状态、待处理请求与模拟审批。",
+    "note": "交互原型；任务、审批、语音入口与用量均为模拟。",
+    "repo": "vibedock-demo",
+    "demo": "./projects/vibedock/",
+    "art": "dock",
+    "path": "vibedock"
+  },
+  {
+    "name": "栖伴 QIBAN",
+    "kind": "demo",
+    "label": "陪伴 × 交互",
+    "description": "让桌面多一位小伙伴。体验消息提醒、触摸互动、电量变化与夜间陪伴。",
+    "note": "浏览器交互原型，不是 Android APK；系统状态均为模拟。",
+    "repo": "qiban-desktop-pet",
+    "demo": "./projects/qiban/",
+    "art": "pet",
+    "path": "qiban"
+  }
+]
