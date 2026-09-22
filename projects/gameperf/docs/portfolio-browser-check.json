@@ -1,0 +1,18 @@
+{
+  "method": "Real isolated Chrome over local HTTP; native browser storage, no mock adapter",
+  "checks": [
+    "Three portfolio cards rendered",
+    "Portfolio → GamePerf, demo labels and five business stages",
+    "Capability selection and drill-down",
+    "Task saved in native localStorage and survived real reload",
+    "All ten desktop routes rendered",
+    "Ten mobile routes fit at 390px; reduced-motion respected",
+    "No external or API requests from GamePerf demo",
+    "Return link navigated to the actual portfolio",
+    "vibedock entry loaded and rendered",
+    "qiban entry loaded and rendered"
+  ],
+  "gameperfErrors": 0,
+  "otherPageErrors": [],
+  "serverBackendDeployed": false
+}
