@@ -1,0 +1,7 @@
+# EXAMPLE ONLY. Add a new site using the existing Caddy management workflow.
+# Do not overwrite the server's Caddyfile or start another proxy.
+# Replace the placeholder only after domain, DNS and access scope are approved.
+perf.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8765
+}

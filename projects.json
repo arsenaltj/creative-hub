@@ -20,5 +20,16 @@
     "demo": "./projects/qiban/",
     "art": "pet",
     "path": "qiban"
+  },
+  {
+    "name": "GamePerf Studio",
+    "kind": "demo",
+    "label": "AI × 游戏性能研发",
+    "description": "从参数寻优，到能力进化。用可编辑蓝图连接诊断、调优、实验与反馈，让每次尝试留下证据。",
+    "note": "浏览器演示；示例记录仅保存在本浏览器，不连接设备、不运行调参、不提供云端同步。完整后端源码随仓库保留。",
+    "repo": "gameperf-studio",
+    "demo": "./projects/gameperf/",
+    "art": "perf",
+    "path": "gameperf"
   }
 ]

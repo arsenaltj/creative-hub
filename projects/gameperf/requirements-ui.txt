@@ -1,0 +1,2 @@
+# Optional UI smoke tests only; not part of the deployed application.
+playwright==1.57.0

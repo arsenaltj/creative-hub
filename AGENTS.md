@@ -1,10 +1,13 @@
 # Creative Hub
 
-This repository contains exactly two public interactive prototypes: VibeDock in `projects/vibedock/` and QIBAN in `projects/qiban/`. Do not import other repositories or local client data without user instructions.
+The user requested source consolidation of three projects: VibeDock (`projects/vibedock/`), QIBAN (`projects/qiban/`), and GamePerf Studio (`projects/gameperf/`). Do not import unrelated projects or private runtime data.
 
-- Edit project source in its corresponding directory. These are browser demos, not production hardware/client integrations.
-- The landing page is generated: edit `projects.json`, `template.html`, or `style.css`, then run `node build.mjs`. Commit the generated `index.html` and `README.md` when they change.
-- GitHub Pages serves `main` from the root under `/creative-hub/`. Keep asset paths and internal links relative. There is no package installation or backend requirement.
-- Verify both demo entry points after changing routing or shared structure. Preserve simulation labels and avoid claiming real approvals, audio capture, or device connections.
-- Previous standalone repositories remain legacy snapshots. Future changes belong here; do not modify or delete those repositories unless requested.
-- Keep tokens, local task history, firmware SDKs, and user-specific configuration out of this public repository.
+- Maintain each project in its directory. Preserve the existing VibeDock and QIBAN sources unless a task explicitly changes them.
+- Edit projects.json/template.html/style.css and run `node build.mjs`. Commit generated index.html and README.md.
+- GitHub Pages publishes main/root under /creative-hub/. Keep internal links relative. The portfolio only runs static browser demos.
+- GamePerf includes complete FastAPI/SQLite source, but Pages MUST use its generated demo index.html, never web/index.html in server mode. No default accounts, anonymous backend data, server tokens, or live device claims.
+- After changing GamePerf UI, run both `python projects/gameperf/scripts/build_demo.py` and `python projects/gameperf/scripts/build_pages.py`. Nested AGENTS.md defines product/security constraints.
+- Test `node --test tests/portfolio.test.mjs`; run GamePerf backend tests separately. Verify all three deployed routes and the return-to-portfolio link.
+- Previous standalone repositories remain unchanged legacy snapshots. Never delete, archive, or change their visibility without a separate request.
+- Keep tokens, SSH material, local history, vendor SDKs, raw traces, real databases and user-specific deployment configuration out of this PUBLIC repository.
+- Browser demo edits remain in localStorage, not GitHub or a shared server. Same-origin pages share a trust boundary; use only nonsensitive samples.

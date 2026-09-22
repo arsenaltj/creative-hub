@@ -1,0 +1,17 @@
+{
+  "version": "0.3.0",
+  "checks": [
+    "1640px architecture: 5 business stages, 17 nodes, no synthetic telemetry, node contents fit",
+    "Select → contract → drill-down → add child → edit; persisted to explicit test memory adapter",
+    "v02 storage key and schema 1 retained through UI bootstrap (not physical browser disk persistence)",
+    "Graph filter and nested-node search work without changing business data",
+    "7-step illustrative tour ends cleanly, does not mutate records; motion toggle and presentation/Esc work",
+    "Task → linked experiment → required fields → freeze → explicitly demo-only review remains functional",
+    "Feedback conversion creates linked task without executing an Agent",
+    "HTML-like node name remains escaped in directory and graph",
+    "All 10 desktop pages render, exactly one page heading, no page-level horizontal overflow",
+    "390px mobile: all 10 views/nav fit; architecture canvas scrolls internally; OS reduced-motion respected"
+  ],
+  "pageErrors": [],
+  "method": "Playwright set_content with an explicit memory localStorage adapter. File navigation was attempted separately and blocked by browser policy. No policy was disabled. This is UI rendering/interaction validation, not real browser-to-server login, disk persistence, deployment or real-device acceptance."
+}
