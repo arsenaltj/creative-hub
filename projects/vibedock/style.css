@@ -8,4 +8,13 @@
 
 .attention-card{border:1px solid #dcc394;background:#fbf2de;border-radius:12px;overflow:hidden}.attention-card h2{font-size:14px;margin:0;font-weight:500}.attention-list{padding:0 12px 10px;max-height:180px;overflow:auto}.attention-row{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;padding:10px;border-radius:7px;font-size:11px}.attention-row b{display:block;font-weight:500;overflow-wrap:anywhere}.attention-row small{display:block;color:#9a763d;font-size:10px;margin-top:5px}.attention-row>span:last-child{white-space:nowrap}.device-nav button{padding-left:15px;padding-right:15px}.device-nav button.has-attention{background:#f2d895;color:#684b20}.device-attention-list{max-height:176px;overflow:auto;width:100%;padding:4px}.device-attention-list button{display:block;width:100%;text-align:left;border-radius:7px;background:#403820;color:#f2d895;padding:11px;margin:0 0 7px}.device-attention-list b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:500}.device-attention-list small{display:block;font-size:9px;margin-top:5px;color:#baa572}
 
+/* The center is a real device control. Its large hit area stays above the four task zones. */
+.screen .hub{z-index:2;width:66px;height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:5px solid #111c16;background:#dbeab0;color:#213724;pointer-events:auto;box-shadow:0 2px 8px #0a170b99;transition:transform .15s,background .15s}
+.screen .hub:hover:not(:disabled){filter:none;background:#f0f7cf;transform:translate(-50%,-50%) scale(1.06)}
+.screen .hub:active:not(:disabled){transform:translate(-50%,-50%) scale(.96)}
+.screen .hub:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.screen .hub:disabled{background:#526052;color:#d6dfcf;opacity:1}
+.hub-mark{font:24px/1 var(--mono)}.hub-hint{font:8px/1.5 var(--sans);white-space:nowrap;font-weight:700}
+.device-only .intro{display:none}
+
 .share-notice{display:flex;flex-direction:column;gap:8px;margin:0 0 26px;padding:16px 20px;border:1px solid #d4dbc8;border-radius:12px;background:#e9efdf;color:#294632;font-size:13px;line-height:1.7}.share-notice span{color:#61705b;font-size:12px}.device-only .share-notice{font-size:12px}.device-only .share-notice span{font-size:11px}

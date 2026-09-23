@@ -1,5 +1,7 @@
 # VibeDock Demo
 
+圆屏四区中央可点击切换 Codex / WorkBuddy；每个工具保留自己的四个任务槽位。本站仅使用模拟数据。
+
 👉 [在线演示](https://arsenaltj.github.io/creative-hub/projects/vibedock/)
 
 Public interactive demo with simulated data only. No real client connections, recording or command execution.

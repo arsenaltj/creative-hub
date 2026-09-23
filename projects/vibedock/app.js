@@ -13,6 +13,7 @@ const formatTokens=n=>n===null?'—':n>=1000000?`${(n/1000000).toFixed(2)}M`:n>=
 const date=n=>n?new Date(n).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 const safe=()=>online && state?.connected;
 const canDevice=()=>safe() && state.deviceConnected;
+const canSwitchTool=()=>online && state?.deviceConnected;
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5000)}
 async function api(route,data){return demoApi(route,data)}
 function apply(next){
@@ -84,8 +85,9 @@ function renderScreen(){
  const s=badgeState;if(!s)return;const t=current(s),disabled=!canDevice()?'disabled':'';
  document.querySelectorAll('[data-screen]').forEach(b=>b.classList.toggle('active',b.dataset.screen===screen || b.dataset.screen==='tasks' && ['detail','confirm'].includes(screen)));
  if(screen==='tasks'){
- $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><span class="hub">${s.tool==='codex'?'⌘':'w'}</span>${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
-  $('screenHint').textContent='四个槽位保持固定。点击分区查看任务，收到回执后更新状态。';return;
+ const target=s.tool==='codex'?'workbuddy':'codex';
+ $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><button class="hub" data-device-tool="${target}" aria-label="当前 ${names[s.tool]}，点击切换到 ${names[target]}" title="切换到 ${names[target]}" ${!canSwitchTool()?'disabled':''}><span class="hub-mark" aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><span class="hub-hint" aria-hidden="true">切换 ↔</span></button>${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
+  $('screenHint').textContent=`当前 ${names[s.tool]}。点中央切换到 ${names[target]}；点四个分区查看任务。`;return;
  }
  const top=`<div class="screen-top"><button class="screen-back" data-screen="tasks">‹ 四区</button><span>${names[s.tool]}${s.mode==='demo'?' · 模拟':''}</span></div>`;
  let content='';
@@ -133,6 +135,7 @@ document.addEventListener('click',async e=>{
  try {
   if(b.dataset.close)$(b.dataset.close).close();
   if(b.dataset.tool && b.dataset.tool!==state.tool)await send('tool.select',{target:b.dataset.tool});
+  if(b.dataset.deviceTool){b.disabled=true;try{await send('tool.select',{target:b.dataset.deviceTool},'device');toast(`已切换到 ${names[b.dataset.deviceTool]}`)}finally{renderScreen()}}
   if(b.dataset.screen){screen=b.dataset.screen;decision=null;renderScreen()}
   if(b.dataset.task || b.dataset.deviceTask){const device=!!b.dataset.deviceTask;await send('task.select',{taskId:b.dataset.task || b.dataset.deviceTask},device?'device':'pc');screen='detail';renderScreen()}
   if(b.dataset.decision)requestDecision(b.dataset.decision,'pc');

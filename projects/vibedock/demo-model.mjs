@@ -61,6 +61,7 @@ export class Companion extends EventEmitter {
     const s=this.tools[m.tool];
     this.log('↑',m.type,'收到');
     if(m.type==='tool.select') {
+      if(m.source==='device')requireThat(this.deviceConnected,'设备离线，请重新连接');
       requireThat(validTool(m.target),'未知工具',400);this.activeTool=m.target;this.epoch=randomUUID();
     } else if(m.type==='mode.set') {
       requireThat(m.mode==='demo','分享版仅支持模拟数据',400);
