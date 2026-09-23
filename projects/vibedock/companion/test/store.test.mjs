@@ -79,6 +79,20 @@ test('an off-screen task only replaces the slot explicitly chosen by the user',a
  assert.equal(s.snapshot().selected,outside.id);
  await assert.rejects(s.command({...msg(s,'task.pin',{taskId:outside.id,slot:0}),epoch:before.epoch}),/上下文/);
 });
+test('new demo session stays off screen until a slot is explicitly chosen',async()=>{
+ const s=new Companion();const before=s.snapshot().tasks.map(t=>t.id);
+ const created=await s.command(msg(s,'demo.session.create'));
+ assert.equal(created.simulated,true);
+ assert.deepEqual(s.snapshot().tasks.map(t=>t.id),before);
+ assert.equal(s.snapshot().availableTasks[0].id,created.taskId);
+ assert.equal(s.snapshot().availableTasks[0].state,'new');
+ assert.equal(s.snapshot().attention.some(t=>t.id===created.taskId),false);
+ await s.command(msg(s,'task.pin',{taskId:created.taskId,slot:1}));
+ assert.equal(s.snapshot().tasks[1].id,created.taskId);
+ assert.deepEqual([s.snapshot().tasks[0].id,s.snapshot().tasks[2].id,s.snapshot().tasks[3].id],[before[0],before[2],before[3]]);
+ await s.command(msg(s,'mode.set',{mode:'live'}));
+ await assert.rejects(s.command(msg(s,'demo.session.create')),/原客户端新建/);
+});
 test('an in-flight real refresh cannot overwrite a switch to demo',async()=>{
  let resolve;const pending=new Promise(r=>resolve=r);
  const s=new Companion({defaultMode:'live',adapters:{codex:{read:()=>pending}}});

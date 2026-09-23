@@ -34,7 +34,7 @@ export class Companion extends EventEmitter {
     const tasks=s.slots.map(id=>s.tasks.find(t=>t.id===id)||null);
     const known=tasks.filter(t=>t && t.tokens!==null),unknown=tasks.filter(t=>t && t.tokens===null).length;
     return {v:1,type:'snapshot',instanceId:this.instanceId,epoch:this.epoch,revision:this.revision,tool:this.activeTool,mode:s.mode,provider:s.provider,pollMs:s.pollMs,scope:s.scope,connected:s.connected,deviceConnected:this.deviceConnected,
-      lastSync:s.lastSync,error:s.error,note:s.note,busy:s.busy,tasks,availableTasks:s.tasks.map(t=>({id:t.id,title:t.title,state:t.state,updatedAt:t.updatedAt})),selected:s.selected,
+      lastSync:s.lastSync,error:s.error,note:s.note,busy:s.busy,tasks,availableTasks:s.tasks.map(t=>({id:t.id,title:t.title,state:t.state,stateLabel:t.stateLabel || null,updatedAt:t.updatedAt})),selected:s.selected,
       hookStatus:s.hookStatus || null,hookLastEventAt:s.hookLastEventAt || null,
       attention:s.tasks.filter(t=>t.state==='failed' || t.state==='waiting' && (this.activeTool==='codex' || !!t.approval)).map(t=>({id:t.id,title:t.title,state:t.state,label:t.stateLabel || (t.state==='failed'?'任务异常':'需要回应'),inSlots:s.slots.includes(t.id)})),
       usage:{tokens:known.length?known.reduce((sum,t)=>sum+t.tokens,0):null,known:known.length,unknown,quota:s.quota,quotaNote:s.quotaNote},localOnline:s.localOnline,
@@ -89,6 +89,15 @@ export class Companion extends EventEmitter {
       requireThat(s.mode==='demo','真实数据不支持重置');Object.assign(s,demoData(m.tool));this.assign(m.tool,true);this.epoch=randomUUID();
     } else {
       if(m.source==='device')requireThat(this.deviceConnected,'设备离线，请重新连接');
+      if(m.type==='demo.session.create'){
+        requireThat(s.mode==='demo','请在原客户端新建会话；VibeDock 会在同步后显示它');
+        const id=`${m.tool}-demo-new-${randomUUID()}`;
+        s.tasks.unshift({id,title:'新会话 · 等待输入',project:m.tool==='codex'?'website':'workspace',state:'new',stateLabel:'尚未开始',lastState:null,
+          summary:'模拟空会话已建立。请先选择要显示的分区，再在原工具中输入或使用其语音入口。',output:null,source:'模拟适配器',
+          statusNote:'仅演示新建流程；没有在原客户端创建会话',tokens:null,updatedAt:Date.now(),approval:null,
+          capabilities:{approve:false,nativeVoice:true,openTask:true}});
+        this.log('↓',m.type,'已创建模拟空会话');this.publish();return {simulated:true,taskId:id,message:'模拟会话已建立；请选择一个分区'};
+      }
       requireThat(s.connected,'工具连接已断开，请先同步');
       if(m.type==='task.focus'){
         const target=s.tasks.find(t=>t.id===m.taskId);requireThat(target,'任务已不在当前读取范围');

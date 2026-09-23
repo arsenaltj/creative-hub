@@ -38,7 +38,7 @@
 }
 ```
 
-`tasks` 元素包含 `id/title/project/state/lastState/summary/output/source/statusNote/tokens/updatedAt/approval/capabilities`。`output` 是可读取的最新回复节选 `{kind,text,at,truncated}`，无正文时为 `null`；泛化状态摘要不冒充会话正文。状态为 `running/waiting/completed/failed/paused/unknown`。`lastState` 只是历史轮次状态，不替代实时 `state`。
+`tasks` 元素包含 `id/title/project/state/lastState/summary/output/source/statusNote/tokens/updatedAt/approval/capabilities`。`output` 是可读取的最新回复节选 `{kind,text,at,truncated}`，无正文时为 `null`；泛化状态摘要不冒充会话正文。状态为 `running/waiting/completed/failed/paused/unknown`；模拟新建的空会话使用 `new`，表示尚未输入，不能当成待审批。`lastState` 只是历史轮次状态，不替代实时 `state`。
 
 0.2 增加可选 `stateLabel`（例如 WorkBuddy 的“等待 / 未开始”）、`observedAt`、`evidence`（来源、原始事件或状态、记录时间、是否陈旧）、`contextUsage: {used,size}`。上下文占用不加入累计 Token。快照增加 `provider: desktop/cloud` 和 `pollMs`。本机数据约每 2 秒刷新；云端 15 秒。`connected` 表示数据源可读，`localOnline` 是 WorkBuddy 心跳线索，均不能单独证明某个任务正在执行。`lastSync` 是读取时间，`evidence.at` 才是状态记录时间。
 
@@ -73,6 +73,7 @@
 | `task.select` | `taskId` | 同步选中任务 |
 | `task.focus` | `taskId` | 选择已读取任务；区外任务替换当前选中槽位并更新 epoch |
 | `task.pin` | `taskId,slot(0..3)` | 用户显式选择替换分区，只变更一槽并更新 epoch；新版界面对区外任务使用此动作 |
+| `demo.session.create` | 无 | 仅在模拟模式创建空会话，先进入未上屏列表，不自动占用四区；真实模式拒绝并引导在原客户端新建 |
 | `interaction.resolve` | `taskId, requestId, requestRevision, decision` | 模拟批准/拒绝，校验后等回执 |
 | `voice.start` | `taskId` | 仅模拟原生语音触发，不录音 |
 | `task.open` | `taskId` | 模拟回执，或 Windows 原客户端任务深链请求 |

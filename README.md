@@ -6,7 +6,7 @@
 
 | 项目 | 类型 | 演示 | 源码 | 下载 |
 |---|---|---|---|---|
-| VibeDock | 交互演示 + PC 预览版源码 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/vibedock/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/vibedock) | [Windows 预览版](https://github.com/arsenaltj/creative-hub/releases/tag/vibedock-v0.4.0) |
+| VibeDock | 交互演示 + PC 预览版源码 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/vibedock/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/vibedock) | [Windows 预览版](https://github.com/arsenaltj/creative-hub/releases/tag/vibedock-v0.5.0) |
 | 栖伴 QIBAN | 交互原型 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/qiban/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/qiban) | — |
 | GamePerf Studio | 研发工作台演示 + 后端源码 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/gameperf/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/gameperf) | — |
 

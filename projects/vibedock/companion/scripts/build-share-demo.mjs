@@ -15,7 +15,7 @@ model=`// Generated from the demo-only state machine. No real adapters or networ
 model=model.replaceAll('设备通过服务端快照收到变化','圆屏模拟器已同步变化');
 await writeFile(new URL('demo-model.mjs',out),model);
 let app=await read('public/app.js');
-app="import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.4.0';\n"+app;
+app="import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.5.0';\n"+app;
 app=app.replace("let guideVisible=true;try{guideVisible=localStorage.getItem('vibedock-guide-hidden')!=='1'}catch{}","let guideVisible=false");
 app=app.replace(/async function api\(route,data\)\{[\s\S]*?\n\}/,"async function api(route,data){return demoApi(route,data)}");
 app=app.replace(/async function connect\(\)\{[\s\S]*$/,"async function connect(){const session=await api('/api/session');online=true;apply(session.snapshot);subscribeDemo(next=>{online=true;apply(next)})}\nvoid connect();\n");
@@ -28,7 +28,7 @@ app=app.replace("state.lastSync?`最近同步", "state.lastSync?`最近同步");
 await writeFile(new URL('app.js',out),app);
 let html=await read('public/index.html');
 html=html.replace('<title>VibeDock · 工作台</title>','<title>VibeDock · 在线交互演示</title><meta name="description" content="体验 VibeDock 四区任务圆屏、待处理列表、模拟审批与用量展示。所有数据均为示例，不连接真实 AI 客户端。"><meta name="robots" content="noindex,nofollow">');
-html=html.replace('LOCAL COMPANION / 0.4','ONLINE DEMO / 0.4').replaceAll('接入设置','演示说明');
+html=html.replace('LOCAL COMPANION / 0.5','ONLINE DEMO / 0.5').replaceAll('接入设置','演示说明');
 html=html.replace('<button id="guideButton" class="quiet">使用引导</button>','');
 html=html.replace('连接本地服务…','演示加载中…').replace('<main>','<main><aside class="share-notice"><b>在线交互演示 · 全部为模拟数据</b><span>可体验四区、待处理、模拟审批与断连恢复。不会连接真实 Codex / WorkBuddy，也不会录音或执行命令。</span></aside>');
 html=html.replace('<option value="live">真实接入</option>','');
@@ -39,7 +39,7 @@ html=html.replace('只作用于模拟适配器。真实任务显示原工具返�
 html=html.replace('仅本机访问 · 凭证不下发到设备','示例数据 · 浏览器内演示 · 无真实客户端连接');
 html=html.replace(/<dialog id="settingsDialog">[\s\S]*?<\/dialog>/,`<dialog id="settingsDialog"><p class="eyebrow">ABOUT THIS DEMO</p><h2>这是一份可交互的产品演示</h2><p>选择 Codex 或 WorkBuddy，点击黄色分区，体验核对请求、模拟批准或拒绝，以及状态同步。用下方交互体验台切换执行、完成和异常状态。</p><div class="setting-block"><h3>当前演示范围</h3><p>全部任务、Token 和额度均为示例。批准、打开任务和语音只返回模拟结果，不执行命令、不启动原客户端、不录音。</p></div><div class="setting-block"><h3>每位访客独立体验</h3><p>状态仅保存在当前浏览器。同一浏览器的工作台与独立圆屏可同步，其他访客不会看到你的操作。可以随时重置模拟场景。</p></div><div class="setting-block"><h3>PC 软件与硬件的进度</h3><p>PC 本机版已接入部分任务状态和 Codex 用量。WorkBuddy 新任务实时状态、精确任务跳转和真实审批闭环仍待验收；原生语音、蓝牙及固件尚未交付。在线演示不等于这些能力已完成。</p></div><button data-close="settingsDialog" class="secondary">开始体验</button></dialog>`);
 html=html.replaceAll('href="/','href="./').replaceAll('src="/','src="./');
-html=html.replace('href="./style.css"','href="./style.css?v=0.4.0"').replace('src="./app.js"','src="./app.js?v=0.4.0"');
+html=html.replace('href="./style.css"','href="./style.css?v=0.5.0"').replace('src="./app.js"','src="./app.js?v=0.5.0"');
 await writeFile(new URL('index.html',out),html);
 await writeFile(new URL('style.css',out),(await read('public/style.css'))+'\n.share-notice{display:flex;flex-direction:column;gap:8px;margin:0 0 26px;padding:16px 20px;border:1px solid #d4dbc8;border-radius:12px;background:#e9efdf;color:#294632;font-size:13px;line-height:1.7}.share-notice span{color:#61705b;font-size:12px}.device-only .share-notice{font-size:12px}.device-only .share-notice span{font-size:11px}\n');
 await cp(out,new URL('share-demo/dist/',root),{recursive:true});

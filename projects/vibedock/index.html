@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>VibeDock · 在线交互演示</title><meta name="description" content="体验 VibeDock 四区任务圆屏、待处理列表、模拟审批与用量展示。所有数据均为示例，不连接真实 AI 客户端。"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="./style.css?v=0.4.0"><script type="module" src="./app.js?v=0.4.0"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>VibeDock · 在线交互演示</title><meta name="description" content="体验 VibeDock 四区任务圆屏、待处理列表、模拟审批与用量展示。所有数据均为示例，不连接真实 AI 客户端。"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="./style.css?v=0.5.0"><script type="module" src="./app.js?v=0.5.0"></script></head>
 <body>
-<header><a class="brand" href="./" aria-label="VibeDock 工作台"><span class="brand-mark">v.</span>VibeDock<span class="version">ONLINE DEMO / 0.4</span></a><div class="header-actions"><span id="service" class="connection">演示加载中…</span><button id="settingsButton" class="quiet">演示说明</button></div></header>
+<header><a class="brand" href="./" aria-label="VibeDock 工作台"><span class="brand-mark">v.</span>VibeDock<span class="version">ONLINE DEMO / 0.5</span></a><div class="header-actions"><span id="service" class="connection">演示加载中…</span><button id="settingsButton" class="quiet">演示说明</button></div></header>
 <main><aside class="share-notice"><b>在线交互演示 · 全部为模拟数据</b><span>可体验四区、待处理、模拟审批与断连恢复。不会连接真实 Codex / WorkBuddy，也不会录音或执行命令。</span></aside>
  <div class="intro"><div><p class="eyebrow">A LITTLE WINDOW INTO YOUR WORK</p><h1>把进展，放在手边。</h1><p class="subtitle">四个任务，一个圆屏。需要你时，轻触回应。</p></div><div class="tool-switch" aria-label="选择工具"><button data-tool="codex" aria-pressed="true">⌘ &nbsp; Codex</button><button data-tool="workbuddy" aria-pressed="false">w &nbsp; WorkBuddy</button></div></div>
  <div id="offline" class="notice" hidden>连接已断开，显示最后快照。恢复同步后才能操作。</div>
@@ -11,7 +11,8 @@
   <section class="device-stage" aria-label="圆形吧唧模拟器">
    <div class="stage-head"><span class="micro">VIBEDOCK / DEVICE SIMULATOR</span><span id="deviceStatus" class="connection">模拟设备在线</span></div>
    <div class="badge"><div id="screen" class="screen" aria-live="polite"><div class="empty">正在同步…</div></div></div>
-   <nav class="device-nav" aria-label="圆屏页面"><button data-screen="tasks" class="active">四区</button><button data-screen="attention" id="deviceAttention">待处理</button><button data-screen="voice">语音</button><button data-screen="usage">用量</button></nav>
+   <p class="hardware-label">屏幕外实体按键 · 交互映射示意</p>
+   <nav class="device-nav" aria-label="屏幕外实体按键模拟"><button data-screen="tasks" class="active">四区</button><button data-screen="new">新会话</button><button data-screen="attention" id="deviceAttention">待处理</button><button data-screen="voice">语音</button></nav>
    <div class="legend"><span><i class="running"></i>执行</span><span><i class="waiting"></i>待介入</span><span><i class="completed"></i>完成</span><span><i class="failed"></i>异常</span><span><i class="unknown"></i>未知</span></div>
    <p id="screenHint" class="stage-caption">点中央进入工具选择页；同一浏览器中的圆屏与工作台会同步。</p>
    <div class="stage-foot"><button id="deviceToggle" class="link">模拟断连</button><a href="./?view=device" target="_blank" rel="noopener">独立圆屏 ↗</a><span id="packetVersion">PROTOCOL / V1</span></div>
@@ -21,7 +22,7 @@
    <p id="sourceNote" class="source-note"></p>
    <section id="attentionCard" class="attention-card" aria-label="待处理任务" hidden><div class="card-head"><h2 id="attentionTitle">需要你看一下</h2><span id="attentionScope" class="micro"></span></div><div id="attentionList" class="attention-list"></div></section>
    <div class="stats"><div class="stat"><span>执行中</span><strong id="runningCount">—</strong><small id="runningHint">当前四个槽位</small></div><div class="stat"><span>待介入</span><strong id="waitingCount">—</strong><small id="waitingHint">需要你的回应</small></div><button id="usageCard" class="stat usage-stat"><span id="usageLabel">剩余额度</span><strong id="tokens">—</strong><small id="tokenHint">等待数据</small></button></div>
-   <section class="card"><div class="card-head"><h2>手边的任务 <span id="taskCount" class="micro">/ 04</span></h2><button id="latest" class="link">换为最近四项 ↻</button></div><div id="tasks" class="task-list"></div></section>
+   <section class="card"><div class="card-head"><h2>手边的任务 <span id="taskCount" class="micro">/ 04</span></h2><div class="card-actions"><button id="newSession" class="link">＋ 新会话</button><button id="latest" class="link">换为最近四项 ↻</button></div></div><div id="tasks" class="task-list"></div></section>
    <section id="recentCard" class="card" aria-label="未上屏的最近任务" hidden><div class="card-head"><h2>最近任务未上屏</h2><span id="recentCount" class="micro"></span></div><div id="recentList" class="recent-list"></div></section>
    <section id="detailCard" class="card"><div class="card-head"><h2>任务详情</h2><span id="detailSource" class="micro"></span></div><div id="detail" class="detail-content"></div></section>
    <div class="bottom-status"><span id="synced">等待同步</span><span>语音入口仅模拟，不录音</span></div>
@@ -35,5 +36,6 @@
 <dialog id="usageDialog"><p class="eyebrow">USAGE / CURRENT TOOL</p><h2>用量与账户额度</h2><div id="usageDetail"></div><button data-close="usageDialog" class="secondary">关闭</button></dialog>
 <dialog id="slotDialog"><p class="eyebrow">PIN TASK / ONE SLOT</p><h2>放到哪个分区？</h2><p id="slotTaskTitle" class="muted"></p><div id="slotChoices" class="slot-choices"></div><p class="muted">只替换你选的一个位置；其他三个任务保持不变。</p><button data-close="slotDialog" class="secondary">取消</button></dialog>
 <dialog id="replaceDialog"><p class="eyebrow">REPLACE / FOUR SLOTS</p><h2>换为最近四项？</h2><p class="muted">这会替换当前工具的四个分区。你也可以在“最近任务未上屏”中只换一个分区。</p><div class="actions"><button id="confirmLatest" class="primary">确认替换四项</button><button data-close="replaceDialog" class="secondary">取消</button></div></dialog>
+<dialog id="newSessionDialog"><p class="eyebrow">NEW SESSION / CURRENT TOOL</p><h2 id="newSessionTitle">新建会话</h2><p id="newSessionExplain" class="muted"></p><p class="muted">新会话不会自动占用四区。同步后，在“最近任务未上屏”中选择它，再指定要替换的分区。</p><div class="actions"><button id="confirmNewDemo" class="primary">模拟新建空会话</button><button data-close="newSessionDialog" class="secondary">关闭</button></div></dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 </body></html>
