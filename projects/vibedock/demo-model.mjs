@@ -38,7 +38,7 @@ export class Companion extends EventEmitter {
     return {v:1,type:'snapshot',instanceId:this.instanceId,epoch:this.epoch,revision:this.revision,tool:this.activeTool,mode:s.mode,provider:s.provider,pollMs:s.pollMs,scope:s.scope,connected:s.connected,deviceConnected:this.deviceConnected,
       lastSync:s.lastSync,error:s.error,note:s.note,busy:s.busy,tasks,availableTasks:s.tasks.map(t=>({id:t.id,title:t.title})),selected:s.selected,
       hookStatus:s.hookStatus || null,hookLastEventAt:s.hookLastEventAt || null,
-      attention:s.tasks.filter(t=>['waiting','failed'].includes(t.state)).map(t=>({id:t.id,title:t.title,state:t.state,label:t.stateLabel || (t.state==='failed'?'任务异常':'需要回应'),inSlots:s.slots.includes(t.id)})),
+      attention:s.tasks.filter(t=>t.state==='failed' || t.state==='waiting' && (this.activeTool==='codex' || !!t.approval)).map(t=>({id:t.id,title:t.title,state:t.state,label:t.stateLabel || (t.state==='failed'?'任务异常':'需要回应'),inSlots:s.slots.includes(t.id)})),
       usage:{tokens:known.length?known.reduce((sum,t)=>sum+t.tokens,0):null,known:known.length,unknown,quota:s.quota,quotaNote:s.quotaNote},localOnline:s.localOnline,
       integrations:Object.fromEntries(Object.entries(this.tools).map(([name,t])=>[name,{mode:t.mode,connected:t.connected,error:t.error}])),events:this.events.slice(-12)};
   }

@@ -54,7 +54,7 @@ function render(){
   const waiting=state.tasks.filter(t=>t?.state==='waiting').length;
   $('waitingCount').textContent=waiting?`≥${waiting}`:'—';$('waitingHint').textContent=state.hookStatus==='trusted'?'已收到的审批请求 · 覆盖待验证':'审批钩子未启用，数量未知';
  }
- if(state.mode==='live' && state.tool==='workbuddy' && state.provider==='desktop' && !unknown)$('waitingHint').textContent='包含等待输入 / 未开始';
+ if(state.mode==='live' && state.tool==='workbuddy')$('waitingHint').textContent='可能等待输入或尚未开始';
  $('tokens').textContent=formatTokens(state.usage.tokens);$('tokenHint').textContent=`${state.mode==='demo'?'模拟':'历史记录'} · ${state.usage.known} 项已知 / ${state.usage.unknown} 项未知`;
  const quota=state.usage.quota[0];$('usageLabel').textContent=quota?'剩余额度':'已知任务 Token';
  if(quota){$('tokens').textContent=`${quota.remaining.toFixed(0)}%`;$('tokenHint').textContent=`${quota.label}${quota.resetsAt?' · '+date(quota.resetsAt)+' 恢复':''}`}
@@ -86,11 +86,17 @@ function renderScreen(){
  document.querySelectorAll('[data-screen]').forEach(b=>b.classList.toggle('active',b.dataset.screen===screen || b.dataset.screen==='tasks' && ['detail','confirm'].includes(screen)));
  if(screen==='tasks'){
  const target=s.tool==='codex'?'workbuddy':'codex';
- $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><button class="hub" data-device-tool="${target}" aria-label="当前 ${names[s.tool]}，点击切换到 ${names[target]}" title="切换到 ${names[target]}" ${!canSwitchTool()?'disabled':''}><span class="hub-mark" aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><span class="hub-hint" aria-hidden="true">切换 ↔</span></button>${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
-  $('screenHint').textContent=`当前 ${names[s.tool]}。点中央切换到 ${names[target]}；点四个分区查看任务。`;return;
+ $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><button class="hub" data-screen="tools" aria-label="当前 ${names[s.tool]}，打开工具选择" title="查看工具选择" ${!canSwitchTool()?'disabled':''}><span class="hub-mark" aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><span class="hub-hint" aria-hidden="true">工具 ▸</span></button>${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
+  $('screenHint').textContent=`当前 ${names[s.tool]}。点中央查看工具选择，再确认切换；点四个分区查看任务。`;return;
  }
  const top=`<div class="screen-top"><button class="screen-back" data-screen="tasks">‹ 四区</button><span>${names[s.tool]}${s.mode==='demo'?' · 模拟':''}</span></div>`;
  let content='';
+ if(screen==='tools') {
+  const target=s.tool==='codex'?'workbuddy':'codex',currentMark=s.tool==='codex'?'⌘':'w',targetMark=target==='codex'?'⌘':'w';
+  const other=s.integrations?.[target],otherNote=other?.mode==='demo'?'模拟数据':other?.connected?'状态可读':'暂未连接';
+  content=`<div class="device-kicker">WORKSPACES / 02</div><h2>选择工具</h2><div class="tool-picker"><div class="tool-option current-tool"><span class="tool-glyph" aria-hidden="true">${currentMark}</span><span class="tool-copy"><b>${names[s.tool]}</b><small>当前 · ${s.attention.length} 项待查看</small></span><span class="tool-arrow" aria-hidden="true">✓</span></div><button class="tool-option" data-device-tool="${target}" aria-label="切换到 ${names[target]}" ${!canSwitchTool()?'disabled':''}><span class="tool-glyph" aria-hidden="true">${targetMark}</span><span class="tool-copy"><b>${names[target]}</b><small>${otherNote} · 查看四区</small></span><span class="tool-arrow" aria-hidden="true">›</span></button></div><p class="tool-footnote">两个工具各自保留任务槽位</p>`;
+  $('screenHint').textContent=`当前 ${names[s.tool]}。选择 ${names[target]} 才会切换；返回四区不会改变任务。`;
+ }
  if(screen==='detail') {
   content=t?`${status(t)}<h2>${esc(t.title)}</h2><p class="device-summary">${esc(t.summary)}</p>${t.approval?`<div class="device-actions"><button class="screen-action" data-device-decision="accept" ${disabled}>查看并批准</button><button class="screen-action reject" data-device-decision="decline" ${disabled}>拒绝</button></div>`:`${s.mode==='live'&&t.capabilities.openTask?`<button class="screen-action" data-open="device" ${disabled}>在电脑打开 ↗</button>`:`<button class="screen-action" data-screen="voice" ${disabled}>原生语音</button>`}`}`:'<p>暂无任务</p>';
   $('screenHint').textContent=t?.state==='unknown'?'圆屏显示最后已知信息，当前状态尚未确认。':s.mode==='live'?'点击“在电脑打开”定位原任务，处理后状态会继续同步。':'任务摘要已同步到电脑端。点击批准或拒绝可核对本次请求。';
@@ -110,10 +116,10 @@ function renderScreen(){
  }
  if(screen==='confirm' && decision) {
   const req=t?.approval;
-  content=req?`<div class="device-kicker">仅本次 · 模拟请求</div><h2>${decision.decision==='accept'?'确认批准？':'确认拒绝？'}</h2><p class="device-command">${esc(req.command)}</p><p class="micro">${esc(req.scope)}</p><div class="device-actions"><button class="screen-action" id="deviceConfirm" ${disabled || busy?'disabled':''}>${busy?'等待回执…':'确认'}</button><button class="screen-action reject" data-screen="detail">返回</button></div>`:'<p>请求已处理，请返回四区。</p>';
+  content=req?`<div class="device-kicker">仅本次 · 模拟请求</div><h2>${decision.decision==='accept'?'确认批准？':'确认拒绝？'}</h2><p class="confirm-task">${esc(t.title)}</p><p class="device-command">${esc(req.command)}</p><p class="micro">${esc(req.scope)}</p><div class="device-actions"><button class="screen-action" id="deviceConfirm" ${disabled || busy?'disabled':''}>${busy?'等待回执…':'确认'}</button><button class="screen-action reject" data-screen="detail">返回</button></div>`:'<p>请求已处理，请返回四区。</p>';
   $('screenHint').textContent='确认绑定任务与请求编号；后端会拒绝过期或重复的决定。';
  }
- $('screen').innerHTML=`<div class="screen-inner">${top}${content}<span class="screen-bottom">${canDevice()?'VIBEDOCK / '+screen.toUpperCase():'CACHED / 离线'}</span></div>`;
+ $('screen').innerHTML=`<div class="screen-inner ${screen}-layout">${top}${content}<span class="screen-bottom">${canDevice()?'VIBEDOCK / '+screen.toUpperCase():'CACHED / 离线'}</span></div>`;
 }
 function renderUsage(){
  if(!state)return;const u=state.usage;

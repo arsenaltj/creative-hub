@@ -17,4 +17,25 @@
 .hub-mark{font:24px/1 var(--mono)}.hub-hint{font:8px/1.5 var(--sans);white-space:nowrap;font-weight:700}
 .device-only .intro{display:none}
 
+/* Keep text legible inside the circular safe area; flex children must not crush headings. */
+.screen-inner.voice-layout{padding-top:27px}
+.voice-layout .screen-top{margin-bottom:7px}
+.voice-layout h2{flex-shrink:0;margin:4px 0}
+.voice-layout .voice-icon{font-size:36px;line-height:1;margin:2px 0;flex-shrink:0}
+.voice-layout .quad-title{flex-shrink:0;margin:5px 0 8px}
+.voice-layout .screen-action{flex-shrink:0;margin-top:3px}
+.voice-layout .micro{flex-shrink:0;margin-top:5px}
+
+.tools-layout{padding-top:26px}
+.tools-layout .screen-top{margin-bottom:8px}
+.tools-layout h2{font-size:19px;flex-shrink:0;margin:3px 0 9px}
+.tool-picker{display:flex;flex-direction:column;gap:7px;width:220px;flex-shrink:0}
+.tool-option{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;border:1px solid #596a54;border-radius:11px;padding:8px 11px;background:#2d4335;color:#ecf3dc;text-align:left}
+.tool-option.current-tool{background:#354d3a;border-color:#9ab789}
+.tool-option:not(.current-tool):hover:not(:disabled){background:#3b5b42}
+.tool-glyph{display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border-radius:50%;background:#dbeab0;color:#26402c;font:21px/1 var(--mono)}
+.tool-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.tool-copy b{font-size:12px;font-weight:600;white-space:nowrap}.tool-copy small{font-size:9px;color:#bdcbb5;white-space:nowrap}
+.tool-arrow{font-size:18px;color:#dbeab0}.tool-footnote{font-size:9px!important;flex-shrink:0;margin:7px 0 0!important}
+.confirm-layout h2{flex-shrink:0;margin:3px 0 5px}.confirm-layout .confirm-task{font-size:10px;color:#dbeab0;margin:2px 0 4px;flex-shrink:0;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 .share-notice{display:flex;flex-direction:column;gap:8px;margin:0 0 26px;padding:16px 20px;border:1px solid #d4dbc8;border-radius:12px;background:#e9efdf;color:#294632;font-size:13px;line-height:1.7}.share-notice span{color:#61705b;font-size:12px}.device-only .share-notice{font-size:12px}.device-only .share-notice span{font-size:11px}

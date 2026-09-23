@@ -1,6 +1,6 @@
 # VibeDock Demo
 
-圆屏四区中央可点击切换 Codex / WorkBuddy；每个工具保留自己的四个任务槽位。本站仅使用模拟数据。
+圆屏四区中央打开工具选择页，在第二页选定 Codex 或 WorkBuddy 才会切换；每个工具保留自己的四个任务槽位。本站仅使用模拟数据。
 
 👉 [在线演示](https://arsenaltj.github.io/creative-hub/projects/vibedock/)
 
