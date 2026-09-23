@@ -1,5 +1,5 @@
 import {Companion} from './demo-model.mjs';
-const slot='vibedock-public-demo-v1',listeners=new Set();
+const slot='vibedock-public-demo-v2',listeners=new Set();
 let model=new Companion();
 function restore(){try{const saved=JSON.parse(localStorage.getItem(slot));if(saved?.schema===1 && saved.tools?.codex?.mode==='demo' && saved.tools?.workbuddy?.mode==='demo'){
  for(const field of ['instanceId','epoch','revision','activeTool','deviceConnected','tools','events'])model[field]=saved[field];
