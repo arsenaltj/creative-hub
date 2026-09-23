@@ -1,4 +1,4 @@
-import {Companion} from './demo-model.mjs';
+import {Companion} from './demo-model.mjs?v=0.4.0';
 const slot='vibedock-public-demo-v2',listeners=new Set();
 let model=new Companion();
 function restore(){try{const saved=JSON.parse(localStorage.getItem(slot));if(saved?.schema===1 && saved.tools?.codex?.mode==='demo' && saved.tools?.workbuddy?.mode==='demo'){

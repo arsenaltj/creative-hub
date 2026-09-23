@@ -1,4 +1,4 @@
-import {demoApi,subscribeDemo} from './demo-transport.mjs';
+import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.4.0';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={codex:'Codex',workbuddy:'WorkBuddy'};
