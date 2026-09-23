@@ -1,27 +1,16 @@
-// Generated from the demo-only state machine. No real adapters or network access.
-const randomUUID=()=>crypto.randomUUID();
-class EventEmitter { constructor(){this.listeners=new Map()} on(k,fn){if(!this.listeners.has(k))this.listeners.set(k,new Set());this.listeners.get(k).add(fn)} emit(k,v){for(const fn of this.listeners.get(k)||[])fn(v)} }
-function demoData(tool) {
-  const codex=tool==='codex';
-  const titles=codex?['官网深色模式','登录表单校验','项目启动说明','构建失败排查','版本发布检查']:['产品反馈汇总','竞品功能清单','会议纪要整理','周报资料收集','用户研究速记'];
-  const states=['waiting','running','completed','failed','completed'];
-  return {tasks:titles.map((title,i)=>({id:`${tool}-demo-${i+1}`,title,project:codex?'website':'workspace',state:states[i],lastState:null,
-    summary:['等待你确认本次操作；批准后模拟恢复执行。','正在处理任务，可以模拟完成或异常。','本轮任务已完成，可以查看结果。','环境配置缺失，需要介入处理。','最近完成的任务尚未放入四区；选择一个位置后可在圆屏查看。'][i],
-    output:i===0?null:{kind:'latest-reply',text:[null,'已完成页面结构与样式检查。正在核对移动端布局，随后会运行构建。','已更新项目启动说明，并检查了安装、运行和常见问题。完整改动请在电脑端原会话查看。','构建未通过：缺少必要的环境配置。请在电脑端查看错误详情并补齐配置后重试。','已整理本轮要点并标记下一步。点击任务可查看最新回复节选；完整内容仍在原客户端。'][i],at:Date.now(),truncated:false},
-    source:'模拟适配器',statusNote:'演示状态，不会执行实际命令',tokens:codex?[32600,21400,14000,2800,1800][i]:[18400,null,9600,null,2000][i],updatedAt:Date.now(),
-    approval:i===0?{id:`${tool}-request-1`,revision:1,command:codex?'npm run test -- --run':'创建 reports/feedback.md',scope:'模拟工作区 · 仅本次',decisions:['accept','decline']}:null,
-    capabilities:{approve:i===0,nativeVoice:true,openTask:true}})),quota:codex?[{id:'demo-5h',label:'模拟 · 5 小时',remaining:64,resetsAt:null},{id:'demo-week',label:'模拟 · 每周',remaining:42,resetsAt:null}]:[],
-    quotaNote:'模拟账户额度',note:'完整交互演示。任务、审批、语音触发均由模拟适配器响应。',scope:'模拟任务',localOnline:null};
-}
-
+import {EventEmitter} from 'node:events';
+import {randomUUID} from 'node:crypto';
+import {CodexAdapter,WorkBuddyAdapter,demoData} from './adapters.mjs';
+import {WorkBuddyDesktopAdapter} from './workbuddy-desktop.mjs';
+import {openDesktopTask} from './task-links.mjs';
 
 export class AppError extends Error {constructor(message,status=409){super(message);this.status=status}}
 const requireThat=(condition,message,status)=>{if(!condition)throw new AppError(message,status)};
 const validTool=t=>['codex','workbuddy'].includes(t);
 export class Companion extends EventEmitter {
-  constructor() {
-    super();const defaultMode='demo';this.adapters={};const taskOpener=()=>{throw Error('分享版不连接原客户端')};
-    this.preferences=null;this.savedPreferences={activeTool:'codex',slots:{codex:[],workbuddy:[]}};
+  constructor({adapters,defaultMode='demo',taskOpener=openDesktopTask,preferences=null}={}) {
+    super();this.adapters=adapters || {codex:new CodexAdapter(),workbuddy:process.env.VIBEDOCK_WORKBUDDY_TOKEN?new WorkBuddyAdapter({token:process.env.VIBEDOCK_WORKBUDDY_TOKEN}):new WorkBuddyDesktopAdapter()};
+    this.preferences=preferences;this.savedPreferences=preferences?.read() || {activeTool:'codex',slots:{codex:[],workbuddy:[]}};
     this.taskOpener=taskOpener;this.activeTool=validTool(this.savedPreferences.activeTool)?this.savedPreferences.activeTool:'codex';this.instanceId=randomUUID();this.epoch=randomUUID();this.revision=0;this.deviceConnected=true;this.results=new Map();this.events=[];
     this.tools=Object.fromEntries(['codex','workbuddy'].map(tool=>[tool,{mode:defaultMode,...demoData(tool),provider:'desktop',pollMs:2000,slots:[],selected:null,connected:true,lastSync:null,error:null,generation:0,busy:false}]));
     for(const tool of Object.keys(this.tools)) {const s=this.tools[tool];if(s.mode==='live'){s.tasks=[];s.quota=[];s.quotaNote='等待真实额度';s.scope=tool==='codex'?'本机 Codex':'本机 WorkBuddy';s.connected=false;s.note='正在连接本机客户端…'}this.assign(tool)}
@@ -53,6 +42,20 @@ export class Companion extends EventEmitter {
   }
   publish(){this.revision++;this.emit('snapshot',this.snapshot())}
   log(direction,type,result){this.events.push({time:Date.now(),direction,type,result});if(this.events.length>50)this.events.shift()}
+  async refresh(tool=this.activeTool,{visible=false}={}) {
+    const s=this.tools[tool];if(s.mode!=='live' || s.busy)return;
+    const generation=s.generation;s.busy=true;if(visible)this.publish();
+    try {
+      const data=await this.adapters[tool].read();if(s.generation!==generation)return;
+      if(!s.tasks.length && data.tasks.length)this.log('↓',`${tool}.snapshot`,`读取 ${data.tasks.length} 项`);
+      for(const task of data.tasks){const previous=s.tasks.find(t=>t.id===task.id);if(previous && previous.state!==task.state)this.log('↓',`${tool}.state`,`${task.id.slice(0,8)} ${previous.state} → ${task.state}`)}
+      Object.assign(s,data,{connected:true,error:null,lastSync:Date.now()});
+      if(!s.restored && s.mode==='live'){s.slots=this.savedPreferences.slots?.[tool] || [];s.restored=true}
+      this.assign(tool);
+    }
+    catch(error){if(s.generation!==generation)return;s.connected=false;s.error=tool==='workbuddy'?(s.provider==='cloud'?error.message:'WorkBuddy 本地状态库暂不可读，请确认客户端已安装并打开。'):'Codex 读取失败，请确认本机已登录且 CLI 可启动。';s.note='保留最后快照；恢复连接前禁用操作。'}
+    finally {if(s.generation===generation){s.busy=false;this.publish()}}
+  }
   async command(msg) {
     requireThat(msg && msg.v===1 && typeof msg.actionId==='string' && /^[\w-]{8,80}$/.test(msg.actionId),'无效的协议或动作编号',400);
     const fingerprint=JSON.stringify(msg);const cached=this.results.get(msg.actionId);
@@ -73,7 +76,7 @@ export class Companion extends EventEmitter {
       if(m.source==='device')requireThat(this.deviceConnected,'设备离线，请重新连接');
       requireThat(validTool(m.target),'未知工具',400);this.activeTool=m.target;this.epoch=randomUUID();this.savePreferences();
     } else if(m.type==='mode.set') {
-      requireThat(m.mode==='demo','分享版仅支持模拟数据',400);
+      requireThat(['demo','live'].includes(m.mode),'未知模式',400);
       s.generation++;s.busy=false;s.mode=m.mode;s.error=null;s.lastSync=null;s.selected=null;s.slots=[];
       if(m.mode==='demo')Object.assign(s,demoData(m.tool),{connected:true});
       else Object.assign(s,{tasks:[],quota:[],quotaNote:'等待同步',connected:false,note:'正在接入真实数据…',scope:m.tool==='codex'?'本机 Codex':s.provider==='cloud'?'WorkBuddy 云端':'本机 WorkBuddy',localOnline:null,restored:false});
@@ -123,7 +126,7 @@ export class Companion extends EventEmitter {
       } else if(m.type==='demo.state') {
         requireThat(s.mode==='demo','只能修改模拟任务');requireThat(['running','completed','failed','waiting'].includes(m.state),'无效状态',400);
         requireThat(!task.approval?.pending,'请求正在处理');task.state=m.state;
-        task.summary='模拟场景状态已更新，圆屏模拟器已同步变化。';
+        task.summary='模拟场景状态已更新，设备通过服务端快照收到变化。';
         task.output=m.state==='waiting'?null:{kind:'latest-reply',text:`模拟任务状态已变为${{running:'执行中',completed:'已完成',failed:'异常'}[m.state]}。这是新的演示输出；完整内容请在原客户端查看。`,at:Date.now(),truncated:false};
         task.approval=m.state==='waiting'?{id:randomUUID(),revision:1,command:'npm run test -- --run',scope:'模拟工作区 · 仅本次',decisions:['accept','decline']}:null;
         task.capabilities.approve=!!task.approval;
@@ -132,5 +135,16 @@ export class Companion extends EventEmitter {
     this.log('↓',m.type,'已确认');this.publish();
     return {simulated:s.mode==='demo',message:'已同步'};
   }
-  close(){}
+  setWorkBuddyToken(token) {
+    requireThat(typeof token==='string' && token.length>=10 && token.length<=8192 && !/[\r\n]/.test(token),'令牌格式无效',400);
+    const s=this.tools.workbuddy;s.generation++;s.busy=false;this.adapters.workbuddy.close?.();this.adapters.workbuddy=new WorkBuddyAdapter({token});
+    Object.assign(s,{mode:'live',provider:'cloud',pollMs:15000,tasks:[],slots:[],selected:null,quota:[],connected:false,error:null,lastSync:null,note:'正在连接 WorkBuddy…',scope:'WorkBuddy 云端',restored:false});
+    this.epoch=randomUUID();this.publish();
+  }
+  useWorkBuddyDesktop(){
+    const s=this.tools.workbuddy;s.generation++;s.busy=false;this.adapters.workbuddy.close?.();this.adapters.workbuddy=new WorkBuddyDesktopAdapter();
+    Object.assign(s,{mode:'live',provider:'desktop',pollMs:2000,tasks:[],slots:[],selected:null,quota:[],connected:false,error:null,lastSync:null,note:'正在读取本机 WorkBuddy…',scope:'本机 WorkBuddy',restored:false});
+    this.epoch=randomUUID();this.publish();
+  }
+  close(){for(const a of Object.values(this.adapters))a.close?.()}
 }

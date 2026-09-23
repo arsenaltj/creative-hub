@@ -4,9 +4,10 @@
     "kind": "demo",
     "label": "AI × 硬件",
     "description": "四个任务，一个圆屏。把 AI 编程进展放在手边，体验任务状态、待处理请求与模拟审批。",
-    "note": "交互原型；任务、审批、语音入口与用量均为模拟。",
+    "note": "在线演示为模拟；PC 预览版可读取部分真实任务状态与 Codex 回复。真机、审批和语音仍在开发。",
     "repo": "vibedock-demo",
     "demo": "./projects/vibedock/",
+    "download": "https://github.com/arsenaltj/creative-hub/releases/tag/vibedock-v0.4.0",
     "art": "dock",
     "path": "vibedock"
   },

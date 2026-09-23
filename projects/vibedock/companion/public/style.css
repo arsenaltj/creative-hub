@@ -41,5 +41,3 @@
 .tool-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.tool-copy b{font-size:12px;font-weight:600;white-space:nowrap}.tool-copy small{font-size:9px;color:#bdcbb5;white-space:nowrap}
 .tool-arrow{font-size:18px;color:#dbeab0}.tool-footnote{font-size:9px!important;flex-shrink:0;margin:7px 0 0!important}
 .confirm-layout h2{flex-shrink:0;margin:3px 0 5px}.confirm-layout .confirm-task{font-size:10px;color:#dbeab0;margin:2px 0 4px;flex-shrink:0;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-.share-notice{display:flex;flex-direction:column;gap:8px;margin:0 0 26px;padding:16px 20px;border:1px solid #d4dbc8;border-radius:12px;background:#e9efdf;color:#294632;font-size:13px;line-height:1.7}.share-notice span{color:#61705b;font-size:12px}.device-only .share-notice{font-size:12px}.device-only .share-notice span{font-size:11px}

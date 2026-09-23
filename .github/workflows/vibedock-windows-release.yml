@@ -1,0 +1,74 @@
+name: VibeDock Windows portable
+
+on:
+  push:
+    tags:
+      - 'vibedock-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  portable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified Node runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = 'v24.15.0'
+          $archive = "node-$version-win-x64.zip"
+          $base = "https://nodejs.org/dist/$version"
+          Invoke-WebRequest "$base/$archive" -OutFile $archive
+          Invoke-WebRequest "$base/SHASUMS256.txt" -OutFile SHASUMS256.txt
+          $line = Get-Content SHASUMS256.txt | Where-Object { $_.EndsWith("  $archive") } | Select-Object -First 1
+          if (-not $line) { throw "Official checksum for $archive was not found" }
+          $expected = ($line -split '\s+')[0].ToLowerInvariant()
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw "Node archive SHA-256 mismatch" }
+          Expand-Archive $archive -DestinationPath node-runtime
+      - name: Test public companion source
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $node = Join-Path $PWD "node-runtime/node-v24.15.0-win-x64/node.exe"
+          Set-Location projects/vibedock/companion
+          $tests = @(Get-ChildItem test -Filter '*.test.mjs' | ForEach-Object { $_.FullName })
+          & $node --test $tests
+          if ($LASTEXITCODE -ne 0) { throw "Companion tests failed" }
+          & $node --check src/server.mjs
+          if ($LASTEXITCODE -ne 0) { throw "Server syntax check failed" }
+          & $node --check public/app.js
+          if ($LASTEXITCODE -ne 0) { throw "UI syntax check failed" }
+      - name: Assemble Windows portable ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.Substring('vibedock-v'.Length)
+          $name = "VibeDock-Windows-Portable-$version"
+          $bundle = Join-Path $PWD $name
+          $source = Join-Path $PWD 'projects/vibedock/companion'
+          $runtime = Join-Path $PWD 'node-runtime/node-v24.15.0-win-x64'
+          New-Item -ItemType Directory -Path (Join-Path $bundle 'runtime') -Force | Out-Null
+          Copy-Item (Join-Path $runtime 'node.exe') (Join-Path $bundle 'runtime/node.exe')
+          Copy-Item (Join-Path $runtime 'LICENSE') (Join-Path $bundle 'runtime/LICENSE')
+          foreach ($dir in @('src','public','scripts','docs')) {
+            Copy-Item (Join-Path $source $dir) (Join-Path $bundle $dir) -Recurse
+          }
+          foreach ($file in @('README.md','package.json','Start-VibeDock.cmd')) {
+            Copy-Item (Join-Path $source $file) (Join-Path $bundle $file)
+          }
+          Compress-Archive -Path $bundle -DestinationPath "$name.zip" -CompressionLevel Optimal
+      - name: Publish GitHub prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.Substring('vibedock-v'.Length)
+          $zip = "VibeDock-Windows-Portable-$version.zip"
+          gh release create $tag $zip --verify-tag --prerelease --title "VibeDock PC $version · Windows 免安装预览版" --notes-file projects/vibedock/companion/RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed" }

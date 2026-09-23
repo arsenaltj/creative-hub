@@ -1,4 +1,3 @@
-import {demoApi,subscribeDemo} from './demo-transport.mjs';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={codex:'Codex',workbuddy:'WorkBuddy'};
@@ -7,7 +6,7 @@ const taskLabel=t=>t.stateLabel || labels[t.state] || '未知';
 const marks={running:'↻',waiting:'!',completed:'✓',failed:'×',paused:'Ⅱ',unknown:'·'};
 let state=null,badgeState=null,key='',online=false,screen='tasks',decision=null,busy=false,toastTimer,stream,renderKey='';
 let outputView=null,pendingPinTaskId=null,pendingPinSource='pc',pinReturnScreen='tasks';
-let guideVisible=false
+let guideVisible=true;try{guideVisible=localStorage.getItem('vibedock-guide-hidden')!=='1'}catch{}
 const deviceOnly=new URLSearchParams(location.search).get('view')==='device';
 if(deviceOnly){document.body.classList.add('device-only');document.title='VibeDock · 圆屏模拟器'}
 const current=s=>s?.tasks.find(t=>t?.id===s.selected)||s?.tasks.find(Boolean);
@@ -19,7 +18,10 @@ const canSwitchTool=()=>online && state?.deviceConnected;
 const recentOutside=s=>(s?.availableTasks || []).filter(t=>!s.tasks.some(slot=>slot?.id===t.id)).slice(0,4);
 const outputPages=text=>{const chars=Array.from(String(text || '').trim()).slice(0,800),pages=[];for(let i=0;i<chars.length;i+=78)pages.push(chars.slice(i,i+78).join(''));return pages.length?pages:['暂无可读取输出']};
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5000)}
-async function api(route,data){return demoApi(route,data)}
+async function api(route,data){
+ const response=await fetch(route,{method:data===undefined?'GET':'POST',headers:data===undefined?{}:{'Content-Type':'application/json','X-Vibedock-Key':key},body:data===undefined?undefined:JSON.stringify(data)});
+ const result=await response.json();if(!response.ok)throw new Error(result.error||'请求失败');return result;
+}
 function apply(next){
  if(state && next.instanceId!==state.instanceId){state=null;badgeState=null;decision=null;outputView=null;$('confirmDialog').close();screen='tasks'}
  if(state && next.revision<state.revision)return;
@@ -52,14 +54,14 @@ function render(){
  const nextKey=JSON.stringify({state,badgeState,online},(name,value)=>['revision','lastSync','observedAt'].includes(name)?undefined:value);
  $('synced').textContent=state.mode==='demo'?'模拟适配器 · 状态实时同步':state.lastSync?`最近同步 ${date(state.lastSync)} · ${(state.pollMs || 2000)/1000} 秒轮询`:'尚未同步真实数据';
  if(nextKey===renderKey)return;renderKey=nextKey;
- $('service').textContent=online?'在线演示 · 模拟数据':'演示未就绪';$('service').classList.toggle('offline',!online);
+ $('service').textContent=online?'本地服务在线':'本地服务离线';$('service').classList.toggle('offline',!online);
  renderGuide();
  $('offline').hidden=online && state.connected;
  $('offline').textContent=!online?'本地服务连接中断，保留最后快照。恢复同步后才能操作。':state.error || '正在连接工具，请稍候。';
  $('deviceStatus').textContent=state.deviceConnected && online?'模拟设备在线':'模拟设备离线';$('deviceStatus').classList.toggle('offline',!state.deviceConnected || !online);
  $('deviceToggle').textContent=state.deviceConnected?'模拟断连':'重新连接';$('deviceToggle').disabled=!online;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.tool===state.tool));b.disabled=!online});
- $('toolName').textContent=names[state.tool];$('mode').value=state.mode;$('mode').disabled=true;
+ $('toolName').textContent=names[state.tool];$('mode').value=state.mode;$('mode').disabled=!online;
  $('sourceBadge').textContent=state.mode==='demo'?'模拟演示':state.connected?state.provider==='cloud'?'云端 · 只读':'本机 · 状态跟踪':'等待连接';$('sourceBadge').classList.toggle('demo',state.mode==='demo');
  $('sourceNote').textContent=state.note+(state.tool==='workbuddy' && state.mode==='live'?` ${state.provider==='cloud'?'本地助理':'客户端心跳'}：${state.localOnline===null?'未知':state.localOnline?'在线':'未检测到'}。`:'');
  $('refresh').textContent=state.busy?'同步中…':'同步 ↻';$('refresh').disabled=!online || state.busy || state.mode==='demo';
@@ -220,10 +222,19 @@ document.addEventListener('click',async e=>{
   if(b.id==='guideButton'){guideVisible=true;renderGuide();$('firstRun').scrollIntoView({behavior:'smooth',block:'start'})}
   if(b.id==='guideDismiss'){guideVisible=false;try{localStorage.setItem('vibedock-guide-hidden','1')}catch{}renderGuide()}
   if(b.id==='guideDemo'){await send('mode.set',{mode:'demo'});toast('已切换模拟任务，所有操作均为演示。')}
+  if(b.id==='workbuddyDesktop'){const result=await api('/api/workbuddy/desktop',{});apply(result.snapshot);$('settingsDialog').close();if(state.tool!=='workbuddy')await send('tool.select',{target:'workbuddy'});toast('已切换本机 WorkBuddy 状态读取，无需云端令牌。')}
   if(b.id==='usageCard')$('usageDialog').showModal();
   if(b.id==='copyTask'){await navigator.clipboard.writeText(current(state).id);toast('任务标识已复制')}
  }catch(error){toast(error.message)}
 });
 $('mode').addEventListener('change',async e=>{try{await send('mode.set',{mode:e.target.value})}catch(error){toast(error.message);renderKey='';render()}});
-async function connect(){const session=await api('/api/session');online=true;apply(session.snapshot);subscribeDemo(next=>{online=true;apply(next)})}
+$('tokenForm').addEventListener('submit',async e=>{e.preventDefault();const input=$('workbuddyToken'),token=input.value;input.value='';try{const result=await api('/api/workbuddy/token',{token});apply(result.snapshot);$('settingsDialog').close();if(state.tool!=='workbuddy')await send('tool.select',{target:'workbuddy'});toast('授权已交给本地服务，正在验证连接。')}catch(error){toast(error.message)}});
+async function connect(){
+ try {
+  const session=await api('/api/session');key=session.key;online=true;apply(session.snapshot);
+  stream?.close();stream=new EventSource('/api/events');
+  stream.onmessage=e=>{try{online=true;apply(JSON.parse(e.data))}catch{toast('收到无法识别的设备快照')}};
+  stream.onopen=()=>{online=true;render()};stream.onerror=()=>{online=false;decision=null;$('confirmDialog').close();stream.close();render();setTimeout(connect,2000)};
+ }catch(error){online=false;$('service').textContent='本地服务未连接';$('offline').hidden=false;$('offline').textContent='未连接本地服务，正在重试…';setTimeout(connect,3000)}
+}
 void connect();
