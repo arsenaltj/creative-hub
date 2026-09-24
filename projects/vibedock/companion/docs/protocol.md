@@ -77,7 +77,7 @@
 | `interaction.resolve` | `taskId, requestId, requestRevision, decision` | 模拟批准/拒绝，校验后等回执 |
 | `voice.start` | `taskId` | 仅模拟原生语音触发，不录音 |
 | `task.open` | `taskId` | 模拟回执，或 Windows 原客户端任务深链请求 |
-| `tool.select` | `target: codex/workbuddy` | PC 顶部可直接切换；设备四区中央先打开工具选择页，用户在第二页选择目标后才发送动作。切换更新 epoch，各工具槽位独立，设备离线时拒绝设备触控 |
+| `tool.select` | `target: codex/workbuddy` | PC 顶部可直接切换；设备四区中央先打开触控菜单，再进工具选择页，用户选择目标后才发送动作。切换更新 epoch，各工具槽位独立，设备离线时拒绝设备触控 |
 | `mode.set` | `mode: live/demo` | PC 数据来源切换 |
 | `tasks.latest` | 无 | 重新绑定最近四项 |
 | `device.connection` | `connected: boolean` | 断连/重连故障注入 |

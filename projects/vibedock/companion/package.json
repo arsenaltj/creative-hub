@@ -1,6 +1,6 @@
 {
   "name": "vibedock-companion",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "description": "Local PC companion and round badge simulator for Codex and WorkBuddy",

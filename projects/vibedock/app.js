@@ -1,4 +1,4 @@
-import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.5.0';
+import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.5.1';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={codex:'Codex',workbuddy:'WorkBuddy'};
@@ -6,7 +6,7 @@ const labels={running:'执行中',waiting:'待介入',completed:'已完成',fail
 const taskLabel=t=>t.stateLabel || labels[t.state] || '未知';
 const marks={running:'↻',waiting:'!',completed:'✓',failed:'×',paused:'Ⅱ',unknown:'·',new:'+'};
 let state=null,badgeState=null,key='',online=false,screen='tasks',decision=null,busy=false,toastTimer,stream,renderKey='';
-let outputView=null,pendingPinTaskId=null,pendingPinSource='pc',pinReturnScreen='tasks',creatingSession=false;
+let outputView=null,pendingPinTaskId=null,pendingPinSource='pc',pinReturnScreen='tasks',voiceReturnScreen='menu',creatingSession=false;
 let guideVisible=false
 const deviceOnly=new URLSearchParams(location.search).get('view')==='device';
 if(deviceOnly){document.body.classList.add('device-only');document.title='VibeDock · 圆屏模拟器'}
@@ -79,7 +79,6 @@ function render(){
  $('attentionCard').hidden=!attention.length;$('attentionTitle').textContent=`${attention.length} 项需要你看一下`;
  $('attentionScope').textContent=`已读取的 ${state.availableTasks.length} 项内`;
  $('attentionList').innerHTML=attention.map(t=>`<button class="attention-row" data-focus="${esc(t.id)}" ${!safe()?'disabled':''}><span><b>${esc(t.title)}</b><small>${esc(t.label)}${t.inSlots?'':' · 四区之外'}</small></span><span>查看 →</span></button>`).join('');
- $('deviceAttention').textContent=`待处理${attention.length?' '+attention.length:''}`;$('deviceAttention').classList.toggle('has-attention',!!attention.length);
  $('taskCount').textContent=`/ ${String(state.tasks.filter(Boolean).length).padStart(2,'0')}`;
  $('tasks').innerHTML=state.tasks.map((t,i)=>t?`<button class="task" data-task="${esc(t.id)}" aria-pressed="${t.id===state.selected}" ${!safe()?'disabled':''}><span class="slot-number ${t.state}">${String(i+1).padStart(2,'0')}</span><span><span class="task-title">${esc(t.title)}</span><span class="task-meta">${esc(t.project)} · ${t.lastState?'上轮'+labels[t.lastState]:'分区 '+(i+1)}</span></span>${status(t)}</button>`:`<div class="task"><span class="slot-number unknown">0${i+1}</span><span class="task-meta">空闲槽位</span></div>`).join('');
  $('latest').disabled=!safe();$('resetDemo').disabled=!online || state.mode!=='demo';
@@ -106,20 +105,23 @@ function renderDetail(){
 }
 function renderScreen(){
  const s=badgeState;if(!s)return;const t=current(s),disabled=!canDevice()?'disabled':'';
- document.querySelectorAll('.device-nav [data-screen]').forEach(b=>b.classList.toggle('active',b.dataset.screen===screen || b.dataset.screen==='tasks' && ['detail','confirm','recent','slot-picker','output','tools'].includes(screen)));
  if(screen==='tasks'){
  const recent=recentOutside(s);
- $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><button class="hub" data-screen="tools" aria-label="当前 ${names[s.tool]}，打开工具选择" title="查看工具选择" ${!canSwitchTool()?'disabled':''}><span class="hub-mark" aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><span class="hub-hint" aria-hidden="true">工具 ▸</span></button>${recent.length?`<button class="new-task-pill" data-screen="recent" aria-label="最近 ${recent.length} 项任务未上屏">未上屏 ${recent.length}</button>`:''}${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
-  $('screenHint').textContent=`当前 ${names[s.tool]}。点中央查看工具选择，再确认切换；点四个分区查看任务。`;return;
+ $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><button class="hub" data-screen="menu" aria-label="当前 ${names[s.tool]}，打开功能菜单" title="打开功能菜单" ${!canDevice()?'disabled':''}><span class="hub-mark" aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><span class="hub-hint" aria-hidden="true">菜单</span></button>${recent.length?`<button class="new-task-pill" data-screen="recent" aria-label="最近 ${recent.length} 项任务未上屏">未上屏 ${recent.length}</button>`:''}${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
+  $('screenHint').textContent=`当前 ${names[s.tool]}。点中央打开功能菜单；点四个分区查看任务。`;return;
  }
- const back=screen==='output'?'detail':screen==='slot-picker'?pinReturnScreen:screen==='usage'?'tools':'tasks';
- const top=`<div class="screen-top"><button class="screen-back" data-screen="${back}">‹ ${back==='detail'?'任务':back==='tasks'?'四区':back==='new'?'新会话':back==='tools'?'工具':'列表'}</button><span>${names[s.tool]}${s.mode==='demo'?' · 模拟':''}</span></div>`;
+ const back=screen==='output'?'detail':screen==='slot-picker'?pinReturnScreen:screen==='usage'?'tools':screen==='tools' || screen==='new' || screen==='attention'?'menu':screen==='voice'?voiceReturnScreen:'tasks';
+ const top=`<div class="screen-top"><button class="screen-back" data-screen="${back}">‹ ${back==='detail'?'任务':back==='tasks'?'四区':back==='menu'?'菜单':back==='new'?'新会话':back==='tools'?'工具':'列表'}</button><span>${names[s.tool]}${s.mode==='demo'?' · 模拟':''}</span></div>`;
  let content='';
+ if(screen==='menu'){
+  content=`<div class="device-kicker">${names[s.tool]} · 触控菜单</div><h2>想做什么？</h2><div class="touch-menu"><button data-screen="new" ${disabled}><span aria-hidden="true">＋</span><b>新会话</b><small>先查看创建方式</small></button><button data-screen="attention" ${disabled}><span aria-hidden="true">!</span><b>待处理${s.attention.length?' '+s.attention.length:''}</b><small>查看需要介入的任务</small></button><button data-screen="voice" ${disabled}><span aria-hidden="true">●</span><b>语音</b><small>当前会话入口</small></button><button data-screen="tools" ${disabled}><span aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><b>切换工具</b><small>先选择，再切换</small></button></div>`;
+  $('screenHint').textContent='全部功能都在圆屏内。点菜单项进入二级页；左上角可返回四区。';
+ }
  if(screen==='tools') {
   const target=s.tool==='codex'?'workbuddy':'codex',currentMark=s.tool==='codex'?'⌘':'w',targetMark=target==='codex'?'⌘':'w';
   const other=s.integrations?.[target],otherNote=other?.mode==='demo'?'模拟数据':other?.connected?'状态可读':'暂未连接';
   content=`<div class="device-kicker">WORKSPACES / 02</div><h2>选择工具</h2><div class="tool-picker"><div class="tool-option current-tool"><span class="tool-glyph" aria-hidden="true">${currentMark}</span><span class="tool-copy"><b>${names[s.tool]}</b><small>当前 · ${s.attention.length} 项待查看</small></span><span class="tool-arrow" aria-hidden="true">✓</span></div><button class="tool-option" data-device-tool="${target}" aria-label="切换到 ${names[target]}" ${!canSwitchTool()?'disabled':''}><span class="tool-glyph" aria-hidden="true">${targetMark}</span><span class="tool-copy"><b>${names[target]}</b><small>${otherNote} · 查看四区</small></span><span class="tool-arrow" aria-hidden="true">›</span></button></div><button class="tool-usage" data-screen="usage">当前工具用量 →</button><p class="tool-footnote">两个工具各自保留任务槽位</p>`;
-  $('screenHint').textContent=`当前 ${names[s.tool]}。选择 ${names[target]} 才会切换；返回四区不会改变任务。`;
+  $('screenHint').textContent=`当前 ${names[s.tool]}。选择 ${names[target]} 才会切换；返回菜单不会改变任务。`;
  }
  if(screen==='recent'){
   const recent=recentOutside(s);
@@ -212,8 +214,8 @@ document.addEventListener('click',async e=>{
  try {
   if(b.dataset.close)$(b.dataset.close).close();
   if(b.dataset.tool && b.dataset.tool!==state.tool)await send('tool.select',{target:b.dataset.tool});
-  if(b.dataset.deviceTool){b.disabled=true;try{await send('tool.select',{target:b.dataset.deviceTool},'device');toast(`已切换到 ${names[b.dataset.deviceTool]}`)}finally{renderScreen()}}
-  if(b.dataset.screen){screen=b.dataset.screen;decision=null;if(screen==='output'){const t=current(badgeState);outputView=t?.output?.text?{taskId:t.id,text:t.output.text,page:0}:null}renderScreen()}
+  if(b.dataset.deviceTool){b.disabled=true;try{await send('tool.select',{target:b.dataset.deviceTool},'device');screen='tasks';toast(`已切换到 ${names[b.dataset.deviceTool]}`)}finally{renderScreen()}}
+  if(b.dataset.screen){if(b.dataset.screen==='voice')voiceReturnScreen=screen;screen=b.dataset.screen;decision=null;if(screen==='output'){const t=current(badgeState);outputView=t?.output?.text?{taskId:t.id,text:t.output.text,page:0}:null}renderScreen()}
   if(b.dataset.task || b.dataset.deviceTask){const device=!!b.dataset.deviceTask;await send('task.select',{taskId:b.dataset.task || b.dataset.deviceTask},device?'device':'pc');screen='detail';renderScreen()}
   if(b.dataset.decision)requestDecision(b.dataset.decision,'pc');
   if(b.dataset.deviceDecision)requestDecision(b.dataset.deviceDecision,'device');

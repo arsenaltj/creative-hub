@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>VibeDock · 在线交互演示</title><meta name="description" content="体验 VibeDock 四区任务圆屏、待处理列表、模拟审批与用量展示。所有数据均为示例，不连接真实 AI 客户端。"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="./style.css?v=0.5.0"><script type="module" src="./app.js?v=0.5.0"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>VibeDock · 在线交互演示</title><meta name="description" content="体验 VibeDock 四区任务圆屏、待处理列表、模拟审批与用量展示。所有数据均为示例，不连接真实 AI 客户端。"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="./style.css?v=0.5.1"><script type="module" src="./app.js?v=0.5.1"></script></head>
 <body>
 <header><a class="brand" href="./" aria-label="VibeDock 工作台"><span class="brand-mark">v.</span>VibeDock<span class="version">ONLINE DEMO / 0.5</span></a><div class="header-actions"><span id="service" class="connection">演示加载中…</span><button id="settingsButton" class="quiet">演示说明</button></div></header>
 <main><aside class="share-notice"><b>在线交互演示 · 全部为模拟数据</b><span>可体验四区、待处理、模拟审批与断连恢复。不会连接真实 Codex / WorkBuddy，也不会录音或执行命令。</span></aside>
@@ -11,10 +11,8 @@
   <section class="device-stage" aria-label="圆形吧唧模拟器">
    <div class="stage-head"><span class="micro">VIBEDOCK / DEVICE SIMULATOR</span><span id="deviceStatus" class="connection">模拟设备在线</span></div>
    <div class="badge"><div id="screen" class="screen" aria-live="polite"><div class="empty">正在同步…</div></div></div>
-   <p class="hardware-label">屏幕外实体按键 · 交互映射示意</p>
-   <nav class="device-nav" aria-label="屏幕外实体按键模拟"><button data-screen="tasks" class="active">四区</button><button data-screen="new">新会话</button><button data-screen="attention" id="deviceAttention">待处理</button><button data-screen="voice">语音</button></nav>
-   <div class="legend"><span><i class="running"></i>执行</span><span><i class="waiting"></i>待介入</span><span><i class="completed"></i>完成</span><span><i class="failed"></i>异常</span><span><i class="unknown"></i>未知</span></div>
-   <p id="screenHint" class="stage-caption">点中央进入工具选择页；同一浏览器中的圆屏与工作台会同步。</p>
+     <div class="legend"><span><i class="running"></i>执行</span><span><i class="waiting"></i>待介入</span><span><i class="completed"></i>完成</span><span><i class="failed"></i>异常</span><span><i class="unknown"></i>未知</span></div>
+    <p id="screenHint" class="stage-caption">点圆屏中央打开功能菜单；同一浏览器中的圆屏与工作台会同步。</p>
    <div class="stage-foot"><button id="deviceToggle" class="link">模拟断连</button><a href="./?view=device" target="_blank" rel="noopener">独立圆屏 ↗</a><span id="packetVersion">PROTOCOL / V1</span></div>
   </section>
   <div class="right">

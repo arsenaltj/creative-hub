@@ -45,4 +45,16 @@
 .new{--key-bg:#2b3630;--key-fg:#cfe0b1}
 @media(max-width:420px){.device-nav button{min-width:63px;min-height:49px;font-size:9px}.hardware-label{font-size:9px}.card-actions{gap:2px}.card-actions button{font-size:10px}}
 
+/* The badge has no external action keys. Keep every action inside its touch screen. */
+.menu-layout{padding-top:24px}
+.menu-layout .screen-top{margin-bottom:4px}
+.menu-layout h2{font-size:18px;margin:2px 0 5px}
+.touch-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:220px;margin-top:3px}
+.touch-menu button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:64px;padding:5px 6px;border:1px solid #526a50;border-radius:12px;background:#294031;color:#ecf4df;text-align:center}
+.touch-menu button:hover:not(:disabled){background:#375a3e}
+.touch-menu button span{font:18px/1 var(--mono);color:var(--lime)}
+.touch-menu button b{font-size:12px;font-weight:600;line-height:1.4}
+.touch-menu button small{font-size:8px;color:#b6cab0;line-height:1.25}
+.screen-back{min-width:66px;min-height:36px}
+
 .share-notice{display:flex;flex-direction:column;gap:8px;margin:0 0 26px;padding:16px 20px;border:1px solid #d4dbc8;border-radius:12px;background:#e9efdf;color:#294632;font-size:13px;line-height:1.7}.share-notice span{color:#61705b;font-size:12px}.device-only .share-notice{font-size:12px}.device-only .share-notice span{font-size:11px}

@@ -16,6 +16,7 @@ test('published asset set has no network transport, credentials form or real ada
   const source=await readFile(new URL(file,root),'utf8');
   assert.doesNotMatch(source,/\bfetch\s*\(|new EventSource|node:|127\.0\.0\.1|new CodexAdapter|new WorkBuddyAdapter/);
  }
- const html=await readFile(new URL('index.html',root),'utf8');assert.doesNotMatch(html,/<input|value="live"/);assert.match(html,/全部为模拟数据/);
+ const html=await readFile(new URL('index.html',root),'utf8');assert.doesNotMatch(html,/<input|value="live"|屏幕外实体按键|device-nav/);assert.match(html,/全部为模拟数据/);
  assert.doesNotMatch(html,/(?:href|src)="\//);assert.match(html,/href="\.\/\?view=device"/);
+ const ui=await readFile(new URL('app.js',root),'utf8');assert.match(ui,/data-screen="menu"/);assert.match(ui,/class="touch-menu"/);
 });
