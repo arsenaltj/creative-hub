@@ -32,5 +32,16 @@
     "demo": "./projects/gameperf/",
     "art": "perf",
     "path": "gameperf"
+  },
+  {
+    "name": "OrcaSlicer AI 3D Printing UX",
+    "kind": "showcase",
+    "label": "AI × 实体创作",
+    "description": "从一张图片或一个想法，到可检查的 3D 作品与真实打印准备。探索产品闭环、用户旅程和可维护的架构图。",
+    "note": "产品与架构展示；页面不生成模型、不执行切片或设备打印。能力状态以 OrcaSlicer 文档和对应版本验证为准。",
+    "repo": "OrcaSlicer",
+    "demo": "./projects/orca-prd/",
+    "art": "orca",
+    "path": "orca-prd"
   }
 ]

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 860" role="img" aria-labelledby="title desc">
+  <title id="title">AI 3D 打印工作台概念视觉</title>
+  <desc id="desc">抽象照片输入框连接中央有层次的三维雕塑，再延伸到桌面打印机轮廓；仅用于展示，不是产品截图。</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#233137"/><stop offset="1" stop-color="#101a1e"/></linearGradient>
+    <linearGradient id="object" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a3"/><stop offset=".32" stop-color="#f6c746"/><stop offset=".68" stop-color="#b7822a"/><stop offset="1" stop-color="#6d531f"/></linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#263d37"/><stop offset="1" stop-color="#80c6a4"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#e9c66a" stop-opacity=".45"/><stop offset="1" stop-color="#e9c66a" stop-opacity="0"/></radialGradient>
+    <filter id="shadow"><feGaussianBlur stdDeviation="20"/></filter>
+    <style>.hair{fill:none;stroke:#f9e2a2;stroke-width:4;opacity:.65}.contour{fill:none;stroke:#fff0bd;stroke-width:1.2;opacity:.5}.guide{fill:none;stroke:#68867d;stroke-width:1.5;stroke-dasharray:6 7}.label{font:700 12px Consolas,monospace;letter-spacing:2px;fill:#a6bbb0}.small{font:12px Consolas,monospace;fill:#839b91}</style>
+  </defs>
+  <rect x="28" y="25" width="704" height="810" rx="28" fill="url(#panel)" stroke="#3b5052" stroke-width="2"/>
+  <path d="M28 99H732M28 760H732" stroke="#405451"/>
+  <circle cx="65" cy="61" r="5" fill="#f6c746"/><circle cx="84" cy="61" r="5" fill="#547e71"/><circle cx="103" cy="61" r="5" fill="#547e71"/>
+  <text x="535" y="65" class="label">WORKSPACE / CONCEPT</text>
+  <path d="M75 128V724M135 128V724M195 128V724M255 128V724M315 128V724M375 128V724M435 128V724M495 128V724M555 128V724M615 128V724M675 128V724M55 180H705M55 240H705M55 300H705M55 360H705M55 420H705M55 480H705M55 540H705M55 600H705M55 660H705M55 720H705" stroke="#39504c" stroke-width=".5" opacity=".42"/>
+  <ellipse cx="376" cy="450" rx="280" ry="310" fill="url(#glow)"/>
+  <g transform="translate(55 220)"><rect width="153" height="189" rx="13" fill="#223235" stroke="#7b9587"/><rect x="14" y="14" width="125" height="117" rx="5" fill="#314947"/><path d="M20 115L45 78L66 97L95 52L133 112Z" fill="#8cbda1"/><circle cx="43" cy="47" r="14" fill="#f6c746"/><path d="M15 142H118M15 158H91" stroke="#718b80" stroke-width="3"/><text x="15" y="181" class="small">IMAGE / IDEA</text></g>
+  <path class="guide" d="M204 304H265M520 360H594"/>
+  <circle cx="275" cy="303" r="6" fill="#f6c746"/><circle cx="593" cy="360" r="6" fill="#f6c746"/>
+  <ellipse cx="389" cy="669" rx="214" ry="28" fill="#020707" opacity=".8" filter="url(#shadow)"/>
+  <g>
+    <path d="M287 604Q309 555 326 548Q292 522 287 475Q290 447 312 433Q307 372 334 334Q321 295 352 264Q361 204 410 198Q455 206 467 259Q499 286 484 330Q511 369 496 429Q523 448 518 478Q514 526 480 546Q504 561 520 604L503 663Q386 700 276 661Z" fill="url(#object)" stroke="#e0b044" stroke-width="3"/>
+    <path d="M411 199Q453 207 466 260Q496 287 484 330Q509 371 497 429Q520 448 518 479Q513 528 479 546Q504 562 519 605L503 663Q437 686 403 687Z" fill="#62471d" opacity=".25"/>
+    <path d="M352 264Q407 290 467 259M334 335Q400 363 486 328M312 433Q397 461 497 429M293 519Q402 555 507 519M280 615Q395 656 516 617" class="hair"/>
+    <path d="M337 331Q365 374 331 429M475 332Q453 374 484 427M325 438Q341 501 300 530M469 437Q455 503 492 535" class="contour"/>
+    <path d="M360 263Q374 247 388 245M427 247Q448 255 456 269" fill="none" stroke="#fff3c8" stroke-width="3" opacity=".55"/>
+    <ellipse cx="389" cy="648" rx="117" ry="39" fill="none" stroke="#f7dc86" stroke-width="4"/>
+    <path d="M276 664Q387 708 503 665" fill="none" stroke="#f9dc79" stroke-width="3"/>
+  </g>
+  <g transform="translate(556 284)" fill="none" stroke="#8cbfaf" stroke-width="3"><path d="M15 24H140V239H15Z"/><path d="M0 24H155M7 24L25 0H130L148 24M16 201H140M38 51H115M77 52V163M43 171H111M39 171L30 186H122L112 171"/><path d="M76 72L56 155H97Z" fill="url(#side)" stroke="#a8d2b9"/><path d="M25 217H129" stroke="#f6c746"/></g>
+  <path d="M60 785H245M325 785H495M575 785H701" stroke="#566c63"/><text x="60" y="812" class="label">01 / INPUT</text><text x="325" y="812" class="label">02 / MODEL</text><text x="575" y="812" class="label">03 / PRINT</text>
+</svg>
