@@ -7,16 +7,25 @@ const read = path => readFile(new URL(path, root), 'utf8');
 const projects = JSON.parse(await read('projects.json'));
 const home = await read('index.html');
 const demo = await read('projects/gameperf/index.html');
-test('three distinct projects preserve existing entries', () => {
-  assert.deepEqual(projects.map(p=>p.path), ['vibedock','qiban','gameperf']);
-  assert.equal(new Set(projects.map(p=>p.path)).size, 3);
+test('four distinct projects preserve existing entries', () => {
+  assert.deepEqual(projects.map(p=>p.path), ['vibedock','qiban','gameperf','orca-prd']);
+  assert.equal(new Set(projects.map(p=>p.path)).size, 4);
 });
 test('all advertised demo and source entry points exist', async () => {
-  for (const p of projects) { assert.ok((await read(`projects/${p.path}/index.html`)).includes('<html')); assert.ok(home.includes(`href="./projects/${p.path}/"`)); assert.ok(home.includes(`/tree/main/projects/${p.path}`)); }
+  for (const p of projects) { assert.ok((await read(`projects/${p.path}/index.html`)).includes('<html')); assert.ok(home.includes(`href="./projects/${p.path}/"`)); assert.ok(home.includes(p.kind === 'showcase' ? `github.com/arsenaltj/${p.repo}` : `/tree/main/projects/${p.path}`)); }
 });
 test('portfolio cards and count are regenerated', () => {
-  assert.equal((home.match(/<article class="project /g)||[]).length, 3);
-  assert.ok(home.includes('SELECTED EXPERIMENTS / 01—03')); assert.ok(!/<!-- (PROJECTS|COUNT|ARCHIVE) -->/.test(home));
+  assert.equal((home.match(/<article class="project /g)||[]).length, 4);
+  assert.ok(home.includes('SELECTED EXPERIMENTS / 01—04')); assert.ok(!/<!-- (PROJECTS|COUNT|ARCHIVE) -->/.test(home));
+});
+test('Orca showcase route links to three editable architecture diagrams', async () => {
+  const showcase = await read('projects/orca-prd/index.html');
+  assert.ok(showcase.includes('href="../../"'));
+  for (const name of ['architecture-overview.svg','user-journey-overview.svg','technical-architecture.svg']) {
+    assert.ok(showcase.includes(`./assets/${name}`));
+    assert.ok((await read(`projects/orca-prd/assets/${name}`)).includes('<svg'));
+  }
+  assert.ok(showcase.includes('产品蓝图与集成分支静态证据'));
 });
 test('Pages uses demo mode, explicit limits, relative return link and no remote assets', () => {
   assert.ok(demo.includes('name="gp-mode" content="demo"')); assert.ok(demo.includes('作品集演示 · 非云端工作台')); assert.ok(demo.includes('connect-src \'none\''));

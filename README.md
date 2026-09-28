@@ -2,13 +2,14 @@
 
 👉 [打开统一作品集](https://arsenaltj.github.io/creative-hub/)
 
-统一管理 VibeDock、栖伴 QIBAN、GamePerf Studio 的源码、文档与在线入口。此后以 projects/ 下各目录作为维护入口，原独立仓库保留为历史快照，不删除、不改变其可见性。
+统一管理 VibeDock、栖伴 QIBAN、GamePerf Studio、OrcaSlicer AI 3D Printing UX 的源码、文档与在线入口。此后以 projects/ 下各目录作为维护入口，原独立仓库保留为历史快照，不删除、不改变其可见性。
 
 | 项目 | 类型 | 演示 | 源码 | 下载 |
 |---|---|---|---|---|
 | VibeDock | 交互演示 + PC 预览版源码 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/vibedock/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/vibedock) | [Windows 预览版](https://github.com/arsenaltj/creative-hub/releases/tag/vibedock-v0.5.1) |
 | 栖伴 QIBAN | 交互原型 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/qiban/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/qiban) | — |
 | GamePerf Studio | 研发工作台演示 + 后端源码 | [在线演示](https://arsenaltj.github.io/creative-hub/projects/gameperf/) | [源码](https://github.com/arsenaltj/creative-hub/tree/main/projects/gameperf) | — |
+| OrcaSlicer AI 3D Printing UX | 产品文档 + 架构展示 | [展示页面](https://arsenaltj.github.io/creative-hub/projects/orca-prd/) | [源码](https://github.com/arsenaltj/OrcaSlicer) | — |
 
 ## 如何维护
 
