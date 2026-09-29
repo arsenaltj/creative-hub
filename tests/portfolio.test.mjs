@@ -18,14 +18,28 @@ test('portfolio cards and count are regenerated', () => {
   assert.equal((home.match(/<article class="project /g)||[]).length, 4);
   assert.ok(home.includes('SELECTED EXPERIMENTS / 01—04')); assert.ok(!/<!-- (PROJECTS|COUNT|ARCHIVE) -->/.test(home));
 });
-test('Orca showcase route links to three editable architecture diagrams', async () => {
+test('Orca showcase links to its maintained docs and editable architecture diagrams', async () => {
   const showcase = await read('projects/orca-prd/index.html');
   assert.ok(showcase.includes('href="../../"'));
+  for (const name of ['PRD.md','User-Journey.md','Requirements-Evidence.md']) {
+    assert.ok(showcase.includes(`github.com/arsenaltj/creative-hub/blob/main/projects/orca-prd/docs/${name}`));
+    assert.ok((await read(`projects/orca-prd/docs/${name}`)).length > 100);
+  }
   for (const name of ['architecture-overview.svg','user-journey-overview.svg','technical-architecture.svg']) {
     assert.ok(showcase.includes(`./assets/${name}`));
     assert.ok((await read(`projects/orca-prd/assets/${name}`)).includes('<svg'));
   }
   assert.ok(showcase.includes('产品蓝图与集成分支静态证据'));
+});
+test('Orca Markdown links resolve within the published project', async () => {
+  for (const name of ['README.md','PRD.md','User-Journey.md','Requirements-Evidence.md']) {
+    const sourceUrl = new URL(`projects/orca-prd/docs/${name}`, root);
+    const source = await readFile(sourceUrl, 'utf8');
+    for (const [, href] of source.matchAll(/\]\(([^)]+)\)/g)) {
+      const path = href.split('#', 1)[0];
+      if (path && !/^[a-z][a-z\d+.-]*:/i.test(path)) await readFile(new URL(path, sourceUrl));
+    }
+  }
 });
 test('Pages uses demo mode, explicit limits, relative return link and no remote assets', () => {
   assert.ok(demo.includes('name="gp-mode" content="demo"')); assert.ok(demo.includes('作品集演示 · 非云端工作台')); assert.ok(demo.includes('connect-src \'none\''));
