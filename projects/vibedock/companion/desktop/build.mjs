@@ -1,0 +1,11 @@
+import {packager} from '@electron/packager';
+import {mkdir,cp,copyFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('../',import.meta.url)),bundle=path.join(root,'.cache','desktop','companion');
+await mkdir(path.join(bundle,'runtime'),{recursive:true});
+for(const file of ['src','public','node_modules','package.json'])await cp(path.join(root,file),path.join(bundle,file),{recursive:true,force:true});
+const platform=process.env.VIBEDOCK_BUILD_PLATFORM||process.platform,node=process.env.VIBEDOCK_BUNDLE_NODE||process.execPath;
+await copyFile(node,path.join(bundle,'runtime',platform==='win32'?'node.exe':'node'));
+const result=await packager({dir:fileURLToPath(new URL('./',import.meta.url)),out:path.join(root,'dist','desktop'),name:'VibeDock',platform,arch:'x64',electronVersion:'44.5.1',electronZipDir:process.env.VIBEDOCK_ELECTRON_ZIP_DIR,download:{cacheRoot:path.join(root,'.cache','electron'),downloadOptions:{signal:AbortSignal.timeout(1200000)}},overwrite:true,asar:true,prune:true,extraResource:[bundle],ignore:[/\/build\.mjs$/]});
+console.log(result.join('\n'));

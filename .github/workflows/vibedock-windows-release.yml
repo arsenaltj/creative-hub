@@ -28,6 +28,11 @@ jobs:
           $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($expected -ne $actual) { throw "Node archive SHA-256 mismatch" }
           Expand-Archive $archive -DestinationPath node-runtime
+          Add-Content $env:GITHUB_PATH (Join-Path $PWD "node-runtime/node-$version-win-x64")
+      - name: Install companion dependencies
+        shell: pwsh
+        working-directory: projects/vibedock/companion
+        run: npm ci --ignore-scripts
       - name: Test public companion source
         shell: pwsh
         run: |
@@ -54,13 +59,30 @@ jobs:
           New-Item -ItemType Directory -Path (Join-Path $bundle 'runtime') -Force | Out-Null
           Copy-Item (Join-Path $runtime 'node.exe') (Join-Path $bundle 'runtime/node.exe')
           Copy-Item (Join-Path $runtime 'LICENSE') (Join-Path $bundle 'runtime/LICENSE')
-          foreach ($dir in @('src','public','scripts','docs')) {
+          foreach ($dir in @('src','public','scripts','docs','firmware','deploy','node_modules')) {
             Copy-Item (Join-Path $source $dir) (Join-Path $bundle $dir) -Recurse
           }
-          foreach ($file in @('README.md','package.json','Start-VibeDock.cmd')) {
+          foreach ($file in @('README.md','package.json','package-lock.json','Start-VibeDock.cmd','Start-VibeDock-Mini.cmd')) {
             Copy-Item (Join-Path $source $file) (Join-Path $bundle $file)
           }
           Compress-Archive -Path $bundle -DestinationPath "$name.zip" -CompressionLevel Optimal
+      - name: Build native Windows circle
+        shell: pwsh
+        working-directory: projects/vibedock/companion
+        run: |
+          $ErrorActionPreference = 'Stop'
+          npm ci --prefix desktop --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { throw "Desktop dependency install failed" }
+          npm run build:desktop
+          if ($LASTEXITCODE -ne 0) { throw "Desktop build failed" }
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.Substring('vibedock-v'.Length)
+          $exe = Join-Path $PWD 'dist/desktop/VibeDock-win32-x64/VibeDock.exe'
+          $service = Join-Path $PWD 'dist/desktop/VibeDock-win32-x64/resources/companion/src/server.mjs'
+          if (-not (Test-Path $exe) -or -not (Test-Path $service)) { throw "Desktop bundle incomplete" }
+          $license = Join-Path $env:GITHUB_WORKSPACE 'node-runtime/node-v24.15.0-win-x64/LICENSE'
+          Copy-Item $license 'dist/desktop/VibeDock-win32-x64/resources/companion/runtime/LICENSE'
+          Compress-Archive -Path 'dist/desktop/VibeDock-win32-x64' -DestinationPath (Join-Path $env:GITHUB_WORKSPACE "VibeDock-Windows-Desktop-$version.zip") -CompressionLevel Optimal
       - name: Publish GitHub prerelease
         shell: pwsh
         env:
@@ -70,5 +92,6 @@ jobs:
           $tag = '${{ github.ref_name }}'
           $version = $tag.Substring('vibedock-v'.Length)
           $zip = "VibeDock-Windows-Portable-$version.zip"
-          gh release create $tag $zip --verify-tag --prerelease --title "VibeDock PC $version · Windows 免安装预览版" --notes-file projects/vibedock/companion/RELEASE_NOTES.md
+          $desktop = "VibeDock-Windows-Desktop-$version.zip"
+          gh release create $tag $zip $desktop --verify-tag --prerelease --title "VibeDock $version · PC / 手机 / 吧唧多端预览版" --notes-file projects/vibedock/companion/RELEASE_NOTES.md
           if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed" }

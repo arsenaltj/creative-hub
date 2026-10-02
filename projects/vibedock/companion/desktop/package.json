@@ -1,0 +1,1 @@
+{"name":"vibedock-desktop","version":"0.6.0","description":"VibeDock desktop circle window","private":true,"type":"module","main":"main.mjs","scripts":{"start":"electron .","build":"node build.mjs"},"devDependencies":{"electron":"44.5.1","@electron/packager":"20.3.0"}}

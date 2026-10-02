@@ -1,16 +1,27 @@
 {
   "name": "vibedock-companion",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "description": "Local PC companion and round badge simulator for Codex and WorkBuddy",
-  "engines": {"node": ">=22.13"},
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "start": "node src/server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check src/server.mjs && node --check public/app.js",
+    "check": "node scripts/check.mjs",
+    "desktop": "npm --prefix desktop start",
+    "build:desktop": "npm --prefix desktop run build",
+    "relay": "node src/relay-server.mjs",
+    "relay:init": "node scripts/init-relay.mjs",
+    "build:demo": "node scripts/build-share-demo.mjs",
     "probe:codex": "node scripts/probe-codex.mjs",
     "probe:status": "node scripts/probe-status.mjs",
     "hooks:install": "node scripts/install-codex-hook.mjs"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4",
+    "ws": "8.22.0"
   }
 }

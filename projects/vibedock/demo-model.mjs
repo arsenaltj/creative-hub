@@ -40,33 +40,33 @@ export class Companion extends EventEmitter {
     try{this.preferences.write(next);this.savedPreferences=next}
     catch{this.log('!', 'preferences.write','未能保存任务分区设置')}
   }
-  snapshot() {
-    const s=this.tools[this.activeTool];
+  snapshot(tool=this.activeTool) {
+    const s=this.tools[tool];
     const tasks=s.slots.map(id=>s.tasks.find(t=>t.id===id)||null);
     const known=tasks.filter(t=>t && t.tokens!==null),unknown=tasks.filter(t=>t && t.tokens===null).length;
-    return {v:1,type:'snapshot',instanceId:this.instanceId,epoch:this.epoch,revision:this.revision,tool:this.activeTool,mode:s.mode,provider:s.provider,pollMs:s.pollMs,scope:s.scope,connected:s.connected,deviceConnected:this.deviceConnected,
+    return {v:1,type:'snapshot',instanceId:this.instanceId,epoch:this.epoch,revision:this.revision,tool,mode:s.mode,provider:s.provider,pollMs:s.pollMs,scope:s.scope,connected:s.connected,deviceConnected:this.deviceConnected,
       lastSync:s.lastSync,error:s.error,note:s.note,busy:s.busy,tasks,availableTasks:s.tasks.map(t=>({id:t.id,title:t.title,state:t.state,stateLabel:t.stateLabel || null,updatedAt:t.updatedAt})),selected:s.selected,
       hookStatus:s.hookStatus || null,hookLastEventAt:s.hookLastEventAt || null,
-      attention:s.tasks.filter(t=>t.state==='failed' || t.state==='waiting' && (this.activeTool==='codex' || !!t.approval)).map(t=>({id:t.id,title:t.title,state:t.state,label:t.stateLabel || (t.state==='failed'?'任务异常':'需要回应'),inSlots:s.slots.includes(t.id)})),
+      attention:s.tasks.filter(t=>t.state==='failed' || t.state==='waiting' && (tool==='codex' || !!t.approval)).map(t=>({id:t.id,title:t.title,state:t.state,label:t.stateLabel || (t.state==='failed'?'任务异常':'需要回应'),inSlots:s.slots.includes(t.id)})),
       usage:{tokens:known.length?known.reduce((sum,t)=>sum+t.tokens,0):null,known:known.length,unknown,quota:s.quota,quotaNote:s.quotaNote},localOnline:s.localOnline,
       integrations:Object.fromEntries(Object.entries(this.tools).map(([name,t])=>[name,{mode:t.mode,connected:t.connected,error:t.error}])),events:this.events.slice(-12)};
   }
   publish(){this.revision++;this.emit('snapshot',this.snapshot())}
   log(direction,type,result){this.events.push({time:Date.now(),direction,type,result});if(this.events.length>50)this.events.shift()}
-  async command(msg) {
+  async command(msg,context={}) {
     requireThat(msg && msg.v===1 && typeof msg.actionId==='string' && /^[\w-]{8,80}$/.test(msg.actionId),'无效的协议或动作编号',400);
-    const fingerprint=JSON.stringify(msg);const cached=this.results.get(msg.actionId);
+    const fingerprint=JSON.stringify({msg,independentTool:!!context.independentTool});const cached=this.results.get(msg.actionId);
     if(cached){requireThat(cached.fingerprint===fingerprint,'动作编号不能用于不同操作');return cached.promise}
-    const promise=this.execute(msg).then(result=>({v:1,type:'ack',actionId:msg.actionId,ok:true,...result}));
+    const promise=this.execute(msg,context).then(result=>({v:1,type:'ack',actionId:msg.actionId,ok:true,...result}));
     this.results.set(msg.actionId,{fingerprint,promise});
     if(this.results.size>1000)this.results.delete(this.results.keys().next().value);
     return promise;
   }
-  async execute(m) {
+  async execute(m,context={}) {
     requireThat(['device','pc'].includes(m.source),'未知消息来源',400);
     requireThat(validTool(m.tool),'未知工具',400);
     requireThat(m.epoch===this.epoch,'上下文已变化，请同步后重试');
-    requireThat(m.tool===this.activeTool,'当前工具已切换，请重新选择任务');
+    requireThat(context.independentTool || m.tool===this.activeTool,'当前工具已切换，请重新选择任务');
     const s=this.tools[m.tool];
     this.log('↑',m.type,'收到');
     if(m.type==='tool.select') {

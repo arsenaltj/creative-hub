@@ -1,4 +1,4 @@
-import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.5.1';
+import {demoApi,subscribeDemo} from './demo-transport.mjs?v=0.6.0';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={codex:'Codex',workbuddy:'WorkBuddy'};
@@ -8,9 +8,13 @@ const marks={running:'↻',waiting:'!',completed:'✓',failed:'×',paused:'Ⅱ',
 let state=null,badgeState=null,key='',online=false,screen='tasks',decision=null,busy=false,toastTimer,stream,renderKey='';
 let outputView=null,pendingPinTaskId=null,pendingPinSource='pc',pinReturnScreen='tasks',voiceReturnScreen='menu',creatingSession=false;
 let guideVisible=false
-const deviceOnly=new URLSearchParams(location.search).get('view')==='device';
-if(deviceOnly){document.body.classList.add('device-only');document.title='VibeDock · 圆屏模拟器'}
-const current=s=>s?.tasks.find(t=>t?.id===s.selected)||s?.tasks.find(Boolean);
+const view=new URLSearchParams(location.search).get('view');
+const deviceOnly=['device','mini','mobile'].includes(view);
+if(view==='mini')document.body.classList.add('mini-view');if(view==='mobile')document.body.classList.add('mobile-view');
+if(deviceOnly){document.body.classList.add('device-only');document.title=view==='mobile'?'VibeDock · 手机圆屏':view==='mini'?'VibeDock · 桌面小圆屏':'VibeDock · 圆屏模拟器'}
+const current=s=>s?.detailTask||s?.tasks.find(t=>t?.id===s.selected)||s?.tasks.find(Boolean);
+const canControl=()=>state?.access?.role!=='viewer';
+const actionId=()=>crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');
 const formatTokens=n=>n===null?'—':n>=1000000?`${(n/1000000).toFixed(2)}M`:n>=1000?`${(n/1000).toFixed(1)}k`:String(n);
 const date=n=>n?new Date(n).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 const safe=()=>online && state?.connected;
@@ -31,7 +35,7 @@ function apply(next){
 async function send(type,extra={},source='pc'){
  if(!online)throw new Error('本地服务已断开，请恢复连接后重试');
  const basis=source==='device'?badgeState:state;
- const message={v:1,actionId:crypto.randomUUID(),epoch:basis.epoch,tool:basis.tool,source,type,...extra};
+ const message={v:1,actionId:actionId(),epoch:basis.epoch,tool:basis.tool,source,type,...extra};
  const result=await api('/api/command',message);if(result.snapshot)apply(result.snapshot);return result;
 }
 function status(t){return `<span class="status ${t.state}">${marks[t.state]} ${esc(taskLabel(t))}</span>`}
@@ -56,7 +60,7 @@ function render(){
  renderGuide();
  $('offline').hidden=online && state.connected;
  $('offline').textContent=!online?'本地服务连接中断，保留最后快照。恢复同步后才能操作。':state.error || '正在连接工具，请稍候。';
- $('deviceStatus').textContent=state.deviceConnected && online?'模拟设备在线':'模拟设备离线';$('deviceStatus').classList.toggle('offline',!state.deviceConnected || !online);
+ $('deviceStatus').textContent=state.deviceConnected && online?(view==='mobile'?'手机已连接':view==='mini'?'小圆屏在线':'模拟圆屏在线'):'圆屏已离线';$('deviceStatus').classList.toggle('offline',!state.deviceConnected || !online);
  $('deviceToggle').textContent=state.deviceConnected?'模拟断连':'重新连接';$('deviceToggle').disabled=!online;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.tool===state.tool));b.disabled=!online});
  $('toolName').textContent=names[state.tool];$('mode').value=state.mode;$('mode').disabled=true;
@@ -81,11 +85,11 @@ function render(){
  $('attentionList').innerHTML=attention.map(t=>`<button class="attention-row" data-focus="${esc(t.id)}" ${!safe()?'disabled':''}><span><b>${esc(t.title)}</b><small>${esc(t.label)}${t.inSlots?'':' · 四区之外'}</small></span><span>查看 →</span></button>`).join('');
  $('taskCount').textContent=`/ ${String(state.tasks.filter(Boolean).length).padStart(2,'0')}`;
  $('tasks').innerHTML=state.tasks.map((t,i)=>t?`<button class="task" data-task="${esc(t.id)}" aria-pressed="${t.id===state.selected}" ${!safe()?'disabled':''}><span class="slot-number ${t.state}">${String(i+1).padStart(2,'0')}</span><span><span class="task-title">${esc(t.title)}</span><span class="task-meta">${esc(t.project)} · ${t.lastState?'上轮'+labels[t.lastState]:'分区 '+(i+1)}</span></span>${status(t)}</button>`:`<div class="task"><span class="slot-number unknown">0${i+1}</span><span class="task-meta">空闲槽位</span></div>`).join('');
- $('latest').disabled=!safe();$('resetDemo').disabled=!online || state.mode!=='demo';
+ $('latest').disabled=!safe()||!canControl();$('resetDemo').disabled=!online || state.mode!=='demo';
  $('newSession').disabled=!online;
  $('newSessionTitle').textContent=`在 ${names[state.tool]} 新建会话`;
  $('newSessionExplain').textContent=state.mode==='demo'?'这是模拟流程：创建一条空会话，随后手动指定圆屏分区；不会在原客户端创建。':'当前版本不能代你在原客户端创建会话。请到 Codex / WorkBuddy 新建并发出首条消息，VibeDock 读取到后会显示在“最近任务未上屏”。';
- $('confirmNewDemo').hidden=state.mode!=='demo';
+ $('confirmNewDemo').hidden=state.mode!=='demo';$('confirmNewDemo').disabled=!canControl();
  const recent=recentOutside(state);
  $('latest').textContent=recent.length?`最近 ${recent.length} 项未上屏 · 全部替换 ↻`:'换为最近四项 ↻';
  $('recentCard').hidden=!recent.length;$('recentCount').textContent=`${recent.length} 项`;
@@ -93,18 +97,18 @@ function render(){
  $('events').innerHTML=state.events.length?state.events.slice().reverse().map(e=>`<div class="event-row"><span>${new Date(e.time).toLocaleTimeString('zh-CN',{hour12:false})}</span><span>${e.direction} ${esc(e.type)}</span><span>${esc(e.result)}</span></div>`).join(''):'等待触控消息…<br>PC → snapshot → 圆屏<br>圆屏 → action → PC → ack';
  $('capabilities').innerHTML=`<div class="capabilities">${state.mode==='demo'?'演示能力：四区 / 审批 / 语音触发回执 / 断线恢复':state.tool==='codex'?'已接入：本地生命周期事件 / 历史 Token / 账户额度':state.provider==='cloud'?'已接入：云端任务 / 本地助理在线状态':'已接入：本地桌面状态库 / 客户端心跳 / 上下文占用'}</div>`;
  document.querySelectorAll('[data-scenario]').forEach(b=>b.disabled=!safe() || state.mode!=='demo' || !current(state) || !!current(state)?.approval?.pending);
- renderDetail();renderScreen();renderUsage();
+ renderDetail();renderScreen();renderUsage();document.dispatchEvent(new Event('vibedock:state'));
 }
 function renderDetail(){
  const t=current(state);$('detailSource').textContent=t?.source||state.scope;
  if(!t){$('detail').innerHTML=`<div class="empty">${state.mode==='live'?'暂无可读取任务，可切换模拟演示体验交互。':'暂无任务'}</div>`;return}
  const request=t.approval;
- $('detail').innerHTML=`<h3 class="detail-title">${esc(t.title)}</h3><p class="detail-meta">${esc(t.statusNote)}${t.lastState?` · 最后一轮：${labels[t.lastState]}`:''}</p>${status(t)}<p class="detail-copy">${esc(t.summary)}</p><div class="detail-output"><b>${t.output?.text?'最新回复节选':'会话输出'}</b><p class="detail-copy">${t.output?.text?esc(t.output.text):'当前仅可读取任务状态，暂无可展示的会话正文。'}</p>${t.output?.text?`<p class="detail-meta">${date(t.output.at)} · 完整上下文以原客户端为准</p>`:''}</div>${request?`<div class="command">${esc(request.command)}<small>${esc(request.scope)} · 请求 ${esc(request.id.slice(0,12))}</small></div>`:''}<div class="actions">${request?`<button class="primary" data-decision="accept" ${!safe() || request.pending?'disabled':''}>${request.pending?'等待回执…':'批准本次'}</button><button class="danger" data-decision="decline" ${!safe() || request.pending?'disabled':''}>拒绝</button>`:`<button class="primary" data-native="pc" ${!safe() || !t.capabilities.nativeVoice?'disabled':''}>${state.mode==='demo'?'模拟原生语音':'原生语音待接入'}</button>`}<button class="secondary" data-open="pc" ${!safe() || !t.capabilities.openTask?'disabled':''}>${state.mode==='demo'?'模拟打开任务 ↗':t.capabilities.openTask?'在电脑打开任务 ↗':'任务跳转待接入'}</button><button class="link" id="copyTask">复制任务标识</button></div>${state.mode==='live'?'<p class="cap-note">点击打开任务后，请在原客户端核对是否到达正确会话。真实审批与语音仍在原客户端处理。</p>':''}`;
+ $('detail').innerHTML=`<h3 class="detail-title">${esc(t.title)}</h3><p class="detail-meta">${esc(t.statusNote)}${t.lastState?` · 最后一轮：${labels[t.lastState]}`:''}</p>${status(t)}<p class="detail-copy">${esc(t.summary)}</p><div class="detail-output"><b>${t.output?.text?'最新回复节选':'会话输出'}</b><p class="detail-copy">${t.output?.text?esc(t.output.text):'当前仅可读取任务状态，暂无可展示的会话正文。'}</p>${t.output?.text?`<p class="detail-meta">${date(t.output.at)} · 完整上下文以原客户端为准</p>`:''}</div>${request?`<div class="command">${esc(request.command)}<small>${esc(request.scope)} · 请求 ${esc(request.id.slice(0,12))}</small></div>`:''}<div class="actions">${request?`<button class="primary" data-decision="accept" ${!safe() || !canControl() || !t.capabilities.approve || request.pending?'disabled':''}>${request.pending?'等待回执…':'批准本次'}</button><button class="danger" data-decision="decline" ${!safe() || !canControl() || !t.capabilities.approve || request.pending?'disabled':''}>拒绝</button>`:`<button class="primary" data-native="pc" ${!safe() || !t.capabilities.nativeVoice?'disabled':''}>${state.mode==='demo'?'模拟原生语音':'原生语音待接入'}</button>`}<button class="secondary" data-open="pc" ${!safe() || !t.capabilities.openTask?'disabled':''}>${state.mode==='demo'?'模拟打开任务 ↗':t.capabilities.openTask?'在电脑打开任务 ↗':'任务跳转待接入'}</button><button class="link" id="copyTask">复制任务标识</button></div>${state.mode==='live'?'<p class="cap-note">点击打开任务后，请在原客户端核对是否到达正确会话。真实审批与语音仍在原客户端处理。</p>':''}`;
  if(t.evidence)$('detail').insertAdjacentHTML('beforeend',`<p class="detail-meta">状态依据：${esc(t.evidence.event || t.evidence.rawState || '本地记录')} · ${date(t.evidence.at)}${t.evidence.stale?' · 记录已陈旧':''}</p>`);
  if(t.contextUsage)$('detail').insertAdjacentHTML('beforeend',`<p class="detail-meta">已记录的上下文占用：${formatTokens(t.contextUsage.used)} / ${formatTokens(t.contextUsage.size)} tokens（不计入累计用量）</p>`);
 }
 function renderScreen(){
- const s=badgeState;if(!s)return;const t=current(s),disabled=!canDevice()?'disabled':'';
+ const s=badgeState;if(!s)return;const t=current(s),disabled=!canDevice()?'disabled':'',actionDisabled=!canDevice()||!canControl()?'disabled':'';
  if(screen==='tasks'){
  const recent=recentOutside(s);
  $('screen').innerHTML=`<div class="quadrants">${s.tasks.map((v,i)=>v?`<button class="quadrant ${v.state}" data-device-task="${esc(v.id)}" aria-label="分区 ${i+1}，${esc(v.title)}，${esc(taskLabel(v))}" ${disabled}><span class="number">0${i+1}</span><span class="symbol">${marks[v.state]}</span><strong>${esc(taskLabel(v))}</strong><span class="quad-title">${esc(v.title)}</span>${v.lastState?`<span class="history">上轮${labels[v.lastState]}</span>`:''}</button>`:`<div class="quadrant unknown"><span class="number">0${i+1}</span><strong>空闲</strong></div>`).join('')}</div><button class="hub" data-screen="menu" aria-label="当前 ${names[s.tool]}，打开功能菜单" title="打开功能菜单" ${!canDevice()?'disabled':''}><span class="hub-mark" aria-hidden="true">${s.tool==='codex'?'⌘':'w'}</span><span class="hub-hint" aria-hidden="true">菜单</span></button>${recent.length?`<button class="new-task-pill" data-screen="recent" aria-label="最近 ${recent.length} 项任务未上屏">未上屏 ${recent.length}</button>`:''}${!canDevice()?'<span class="offline-chip">离线缓存 / 暂停操作</span>':''}`;
@@ -129,7 +133,7 @@ function renderScreen(){
   $('screenHint').textContent='选择任务后，再指定要替换的分区；其他位置保持不变。';
  }
  if(screen==='new'){
-  content=`<div class="device-kicker">${names[s.tool]} · 新会话</div><h2>开始新想法</h2><p class="device-summary">${s.mode==='demo'?'创建模拟空会话，再选择放入哪个分区。不会操作原客户端。':'请在电脑端 '+names[s.tool]+' 新建并发出首条消息。同步后，从“未上屏”选择分区。'}</p>${s.mode==='demo'?`<button class="screen-action" data-create-demo ${disabled}>模拟新建</button>`:''}<p class="micro">四区任务不会自动被替换</p>`;
+  content=`<div class="device-kicker">${names[s.tool]} · 新会话</div><h2>开始新想法</h2><p class="device-summary">${s.mode==='demo'?'创建模拟空会话，再选择放入哪个分区。不会操作原客户端。':'请在电脑端 '+names[s.tool]+' 新建并发出首条消息。同步后，从“未上屏”选择分区。'}</p>${s.mode==='demo'?`<button class="screen-action" data-create-demo ${actionDisabled}>模拟新建</button>`:''}<p class="micro">四区任务不会自动被替换</p>`;
   $('screenHint').textContent=s.mode==='demo'?'模拟新会话建立后，由你指定替换哪个分区。':'真实新建尚未接入；请先在原客户端操作，VibeDock 会读取新任务。';
  }
  if(screen==='slot-picker'){
@@ -138,7 +142,7 @@ function renderScreen(){
   $('screenHint').textContent='本次只替换选中的一个分区。';
  }
  if(screen==='detail') {
-  content=t?`${status(t)}<h2>${esc(t.title)}</h2><p class="device-summary">${esc(t.summary)}</p>${t.approval?`<div class="device-actions"><button class="screen-action" data-device-decision="accept" ${disabled}>查看并批准</button><button class="screen-action reject" data-device-decision="decline" ${disabled}>拒绝</button></div>`:`<div class="device-actions">${t.output?.text?`<button class="screen-action" data-screen="output">查看输出</button>`:''}${s.mode==='live'&&t.capabilities.openTask?`<button class="screen-action reject" data-open="device" ${disabled}>电脑打开 ↗</button>`:!t.output?.text?`<button class="screen-action" data-screen="voice" ${disabled}>原生语音</button>`:''}</div>`}`:'<p>暂无任务</p>';
+  content=t?`${status(t)}<h2>${esc(t.title)}</h2><p class="device-summary">${esc(t.summary)}</p>${t.approval?`<div class="device-actions"><button class="screen-action" data-device-decision="accept" ${actionDisabled}>查看并批准</button><button class="screen-action reject" data-device-decision="decline" ${actionDisabled}>拒绝</button></div>`:`<div class="device-actions">${t.output?.text?`<button class="screen-action" data-screen="output">查看输出</button>`:''}${s.mode==='live'&&t.capabilities.openTask?`<button class="screen-action reject" data-open="device" ${disabled}>电脑打开 ↗</button>`:!t.output?.text?`<button class="screen-action" data-screen="voice" ${disabled}>原生语音</button>`:''}</div>`}`:'<p>暂无任务</p>';
   $('screenHint').textContent=t?.state==='new'?'空会话已放入四区，等待你在原工具输入第一条消息。':t?.state==='unknown'?'圆屏显示最后已知信息，当前状态尚未确认。':s.mode==='live'?'点击“在电脑打开”定位原任务，处理后状态会继续同步。':'任务摘要已同步到电脑端。点击批准或拒绝可核对本次请求。';
  }
  if(screen==='output'){
@@ -164,7 +168,7 @@ function renderScreen(){
  }
  if(screen==='confirm' && decision) {
   const req=t?.approval;
-  content=req?`<div class="device-kicker">仅本次 · 模拟请求</div><h2>${decision.decision==='accept'?'确认批准？':'确认拒绝？'}</h2><p class="confirm-task">${esc(t.title)}</p><p class="device-command">${esc(req.command)}</p><p class="micro">${esc(req.scope)}</p><div class="device-actions"><button class="screen-action" id="deviceConfirm" ${disabled || busy?'disabled':''}>${busy?'等待回执…':'确认'}</button><button class="screen-action reject" data-screen="detail">返回</button></div>`:'<p>请求已处理，请返回四区。</p>';
+  content=req?`<div class="device-kicker">仅本次 · 模拟请求</div><h2>${decision.decision==='accept'?'确认批准？':'确认拒绝？'}</h2><p class="confirm-task">${esc(t.title)}</p><p class="device-command">${esc(req.command)}</p><p class="micro">${esc(req.scope)}</p><div class="device-actions"><button class="screen-action" id="deviceConfirm" ${actionDisabled || busy?'disabled':''}>${busy?'等待回执…':'确认'}</button><button class="screen-action reject" data-screen="detail">返回</button></div>`:'<p>请求已处理，请返回四区。</p>';
   $('screenHint').textContent='确认绑定任务与请求编号；后端会拒绝过期或重复的决定。';
  }
  $('screen').innerHTML=`<div class="screen-inner ${screen}-layout">${top}${content}<span class="screen-bottom">${canDevice()?'VIBEDOCK / '+screen.toUpperCase():'CACHED / 离线'}</span></div>`;
@@ -174,7 +178,7 @@ function renderUsage(){
  $('usageDetail').innerHTML=`<p class="muted">${names[state.tool]} · ${state.mode==='demo'?'模拟数据':'真实数据'} · 当前四个槽位</p><div class="usage-total">${formatTokens(u.tokens)} <small>tokens</small></div><p class="muted">${u.known} 项已知，${u.unknown} 项未知。历史累计记录不等同于本轮消耗。</p>${u.quota.map(q=>`<div class="quota-row"><div class="quota-heading"><span>${esc(q.label)}</span><b>剩余 ${q.remaining.toFixed(1)}%</b></div><progress value="${q.remaining}" max="100" aria-label="${esc(q.label)}剩余额度"></progress><small>${q.resetsAt?'重置时间 '+date(q.resetsAt):'重置时间未提供'}</small></div>`).join('')}<p class="muted">${esc(u.quotaNote)}</p>`;
 }
 function requestDecision(kind,source){
- const s=source==='device'?badgeState:state,t=current(s),r=t?.approval;if(!r || r.pending)return;
+ const s=source==='device'?badgeState:state,t=current(s),r=t?.approval;if(!canControl() || !r || r.pending)return;
  decision={tool:s.tool,epoch:s.epoch,taskId:t.id,requestId:r.id,requestRevision:r.revision,decision:kind,source};
  if(source==='device'){screen='confirm';renderScreen();return}
  $('confirmTitle').textContent=kind==='accept'?'批准这一次操作？':'拒绝这一次操作？';$('confirmTask').textContent=names[s.tool]+' · '+t.title;$('confirmCommand').textContent=r.command;$('confirmScope').textContent=r.scope;$('confirmAction').textContent=kind==='accept'?'确认批准':'确认拒绝';$('confirmDialog').showModal();
@@ -191,6 +195,7 @@ async function placeTask(slot,source=pendingPinSource){
 }
 async function chooseTask(taskId,source){
  const s=source==='device'?badgeState:state;
+ if(!canControl()){await send('task.select',{taskId},source);screen='detail';renderScreen();return}
  if(s.tasks.some(t=>t?.id===taskId)){await send('task.select',{taskId},source);screen='detail';renderScreen();return}
  pendingPinTaskId=taskId;pendingPinSource=source;pinReturnScreen=screen;
  const empty=s.tasks.findIndex(t=>!t);
@@ -213,6 +218,7 @@ document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b || b.disabled || !state)return;
  try {
   if(b.dataset.close)$(b.dataset.close).close();
+  if(b.id==='miniButton')location.href='./?view=mini';
   if(b.dataset.tool && b.dataset.tool!==state.tool)await send('tool.select',{target:b.dataset.tool});
   if(b.dataset.deviceTool){b.disabled=true;try{await send('tool.select',{target:b.dataset.deviceTool},'device');screen='tasks';toast(`已切换到 ${names[b.dataset.deviceTool]}`)}finally{renderScreen()}}
   if(b.dataset.screen){if(b.dataset.screen==='voice')voiceReturnScreen=screen;screen=b.dataset.screen;decision=null;if(screen==='output'){const t=current(badgeState);outputView=t?.output?.text?{taskId:t.id,text:t.output.text,page:0}:null}renderScreen()}

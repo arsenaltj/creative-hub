@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {mkdir} from 'node:fs/promises';
+import {createCompanionServer} from '../src/companion-server.mjs';
+import {Companion} from '../src/store.mjs';
+const require=createRequire(import.meta.url),{chromium}=require(process.env.VIBEDOCK_PLAYWRIGHT_MODULE||'playwright');
+const browser=await chromium.launch({headless:true,...(process.env.VIBEDOCK_BROWSER_BIN?{executablePath:process.env.VIBEDOCK_BROWSER_BIN}:{})});
+const app=createCompanionServer({store:new Companion(),networkPort:0,networkAddresses:['127.0.0.1']});
+const errors=[],output=new URL('../.cache/multi-ui/',import.meta.url);await mkdir(output,{recursive:true});
+try{
+ await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${app.server.address().port}`;
+ const pc=await browser.newPage({viewport:{width:1440,height:1000}});pc.on('pageerror',e=>errors.push(e.message));await pc.goto(origin);await pc.locator('#screen .hub').waitFor();
+ await pc.locator('#connectionsButton').click();await pc.locator('#lanToggle').click();await pc.locator('#createInvite').click();await pc.waitForFunction(()=>document.getElementById('inviteLink').value);
+ const link=await pc.locator('#inviteLink').inputValue();const mobile=await browser.newPage({viewport:{width:375,height:812},isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));
+ await mobile.goto(link);await mobile.locator('#screen .hub').waitFor();assert.equal(await mobile.locator('#pairDialog').isVisible(),false);assert.equal(await mobile.evaluate(()=>location.hash),'');
+ await mobile.screenshot({path:new URL('mobile-four.png',output).pathname.slice(1)});
+ await mobile.locator('#screen .hub').click();await mobile.locator('[data-screen="tools"]').click();await mobile.locator('[data-device-tool="workbuddy"]').click();await mobile.waitForFunction(()=>document.getElementById('screenHint').textContent.includes('WorkBuddy'));
+ assert.equal(await pc.locator('#toolName').innerText(),'Codex');await mobile.locator('#screen .hub').click();await mobile.locator('[data-screen="new"]').click();assert.equal(await mobile.locator('[data-create-demo]').isDisabled(),true);
+ await pc.locator('#bleMock').click();await pc.waitForFunction(()=>document.getElementById('bleStatus').textContent.includes('模拟已连接'));await pc.locator('#bleMockTouch').click();await pc.waitForFunction(()=>document.getElementById('bleStatus').textContent.includes('触控已确认'));await pc.locator('#bleDisconnect').click();
+ await pc.locator('#inviteRole').selectOption('control');await pc.locator('#createInvite').click();await pc.waitForFunction(old=>document.getElementById('inviteLink').value!==old,link);
+ const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});phone.on('pageerror',e=>errors.push(e.message));await phone.goto(await pc.locator('#inviteLink').inputValue());await phone.locator('#screen .quadrant').first().click();await phone.locator('[data-device-decision="accept"]').waitFor();
+ await phone.locator('[data-device-decision="accept"]').click();await phone.locator('#deviceConfirm').click();await phone.waitForFunction(()=>document.querySelector('#screen .status')?.textContent.includes('执行中'));assert.equal(await pc.locator('#detail .status').innerText(),'↻ 执行中');
+ await phone.screenshot({path:new URL('mobile-detail.png',output).pathname.slice(1)});
+ await phone.locator('[data-screen="tasks"]').click();await phone.locator('#screen .hub').click();await phone.locator('[data-screen="new"]').click();await phone.locator('[data-create-demo]').click();await phone.locator('[data-pin-slot="2"]').click();await phone.waitForFunction(()=>document.getElementById('screenHint').textContent.includes('空会话'));
+ await phone.locator('[data-screen="tasks"]').click();await phone.locator('#screen .hub').click();await phone.screenshot({path:new URL('mobile-menu.png',output).pathname.slice(1)});
+ const mini=await browser.newPage({viewport:{width:390,height:450}});mini.on('pageerror',e=>errors.push(e.message));await mini.goto(origin+'/?view=mini');await mini.locator('#screen .hub').waitFor();await mini.screenshot({path:new URL('mini.png',output).pathname.slice(1)});
+ const dimensions=await mini.evaluate(()=>({width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight,viewport:[innerWidth,innerHeight]}));assert.ok(dimensions.width<=390);assert.ok(dimensions.height<=450,JSON.stringify(dimensions));
+ await pc.locator('#networkRefresh').click();await pc.locator('[data-revoke]').first().click();await mobile.locator('#pairDialog').waitFor();assert.match(await mobile.locator('#pairError').innerText(),/撤销/);assert.deepEqual(errors,[]);
+ console.log('UI verified: QR pairing, independent tools, viewer permissions, simulated control, explicit slot choice, BLE mock acknowledgement, revoke, 375px mobile and 390x450 mini; no page errors.');
+}finally{await browser.close();await app.stop()}

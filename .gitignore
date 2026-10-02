@@ -3,3 +3,9 @@ Thumbs.db
 node_modules/
 .env
 .env.*
+!.env.example
+.cache/
+.local/
+dist/
+test-results/
+*.log

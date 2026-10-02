@@ -1,7 +1,11 @@
-# VibeDock PC 0.5.1 · Windows 免安装预览版
+# VibeDock 0.6.0 · 多端预览版
 
-下载 `VibeDock-Windows-Portable-0.5.1.zip`，解压后双击 `Start-VibeDock.cmd`。软件会在本机启动工作台并打开浏览器；关闭启动窗口即停止服务。ZIP 已包含 Node.js 运行时，无需额外安装。
+下载 `VibeDock-Windows-Desktop-0.6.0.zip`，解压后运行 `VibeDock.exe`，获得可置顶、可隐藏到托盘的小圆屏。托盘菜单打开完整 PC 工作台，退出时停止由本程序启动的服务。
 
-本版可查看本机 Codex 任务状态、部分最新回复与已知用量，以及 WorkBuddy 本地任务状态。圆屏模拟器已移除错误的屏幕外实体按键示意；点四区中央进入触控菜单，再选择新会话、待处理、语音或工具切换。模拟新建后由用户选择分区，不会自动替换已有任务。真实模式引导用户在原客户端新建，随后从未上屏列表选分区。源码位于 `projects/vibedock/companion/`。
+也可下载较小的 `VibeDock-Windows-Portable-0.6.0.zip`，解压后运行 `Start-VibeDock.cmd`，在浏览器中使用工作台。两个包都带 Node 运行时与依赖，无需另外安装。
 
-这是 PC 端预览版。圆屏为浏览器模拟器；物理吧唧固件与蓝牙数据通道尚未接入。从吧唧直接在原客户端新建真实会话、真实审批、原生语音触发以及 WorkBuddy 会话正文仍未接通，界面会明确提示。Windows 安装包、托盘和自动启动也尚未提供。
+本版新增手机圆屏、LAN 扫码配对、查看/控制权限、授权撤销，以及可自行部署的 HTTPS 广域网中继。PC 主动连接中继，配对手机通过服务器看任务。多端可以分别选择 Codex / WorkBuddy；控制设备改变任务槽位会同步到其他设备。PC 源码与部署文件在 `projects/vibedock/companion/`，详见 `docs/multi-device.md`。
+
+蓝牙已提供 PC GATT 客户端、分片与回执协议、联调模拟，以及固件接入头文件。**尚未连接物理吧唧，没有可烧录固件**；需要对应 SDK 工程。公网部署需自己的域名/服务器，本仓库的 GitHub Pages 仍是模拟演示。
+
+真实数据读取延续前版：Codex 部分任务状态、最新输出节选和已知用量；WorkBuddy 本地任务状态。真实审批、原生语音触发、直接创建原客户端新会话和 WorkBuddy 输出仍未接通。Windows 包为未签名预览软件，没有安装器或自动更新。

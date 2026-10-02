@@ -1,0 +1,10 @@
+.cache/
+.local/
+node_modules/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+dist/
+desktop/.cache/
