@@ -7,16 +7,30 @@ const read = path => readFile(new URL(path, root), 'utf8');
 const projects = JSON.parse(await read('projects.json'));
 const home = await read('index.html');
 const demo = await read('projects/gameperf/index.html');
-test('four distinct projects preserve existing entries', () => {
-  assert.deepEqual(projects.map(p=>p.path), ['vibedock','qiban','gameperf','orca-prd']);
-  assert.equal(new Set(projects.map(p=>p.path)).size, 4);
+test('five distinct projects preserve existing entries', () => {
+  assert.deepEqual(projects.map(p=>p.path), ['vibedock','qiban','gameperf','orca-prd','codex-usage-badge']);
+  assert.equal(new Set(projects.map(p=>p.path)).size, 5);
 });
 test('all advertised demo and source entry points exist', async () => {
   for (const p of projects) { assert.ok((await read(`projects/${p.path}/index.html`)).includes('<html')); assert.ok(home.includes(`href="./projects/${p.path}/"`)); assert.ok(home.includes(p.kind === 'showcase' ? `github.com/arsenaltj/${p.repo}` : `/tree/main/projects/${p.path}`)); }
 });
 test('portfolio cards and count are regenerated', () => {
-  assert.equal((home.match(/<article class="project /g)||[]).length, 4);
-  assert.ok(home.includes('SELECTED EXPERIMENTS / 01—04')); assert.ok(!/<!-- (PROJECTS|COUNT|ARCHIVE) -->/.test(home));
+  assert.equal((home.match(/<article class="project /g)||[]).length, 5);
+  assert.ok(home.includes('SELECTED EXPERIMENTS / 01—05')); assert.ok(!/<!-- (PROJECTS|COUNT|ARCHIVE) -->/.test(home));
+});
+test('Badge downloads match its pinned release and preserve attribution', async () => {
+  const page = await read('projects/codex-usage-badge/index.html');
+  const release = JSON.parse(await read('projects/codex-usage-badge/release.json'));
+  const installer = await read('projects/codex-usage-badge/installer/Install-CodexUsageBadge.cmd');
+  assert.ok(page.includes('href="../../"'));
+  for (const url of [release.installer,release.archive,release.release]) assert.ok(page.includes(`href="${url}"`));
+  assert.match(release.sha256,/^[a-f0-9]{64}$/);
+  assert.ok(installer.includes(release.sha256) && installer.includes(release.archive));
+  assert.ok(page.includes('示例') && page.includes('127.0.0.1:39222') && page.includes('jaykinhoo9'));
+  assert.ok((await read('projects/codex-usage-badge/LICENSE')).includes('MIT License'));
+  for (const [,href] of page.matchAll(/(?:src|href)="([^"#]+)"/g)) {
+    if (!/^[a-z][a-z\d+.-]*:/i.test(href) && !href.endsWith('/')) await readFile(new URL(href,new URL('projects/codex-usage-badge/index.html',root)));
+  }
 });
 test('Orca showcase links to its maintained docs and editable architecture diagrams', async () => {
   const showcase = await read('projects/orca-prd/index.html');

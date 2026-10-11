@@ -8,23 +8,26 @@ for (const p of projects) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(p.path) || seen.has(p.path)) throw Error('Invalid or duplicate project path');
   if (!/^[\w.-]+$/.test(p.repo)) throw Error('Invalid repository');
   if (p.demo && p.demo !== `./projects/${p.path}/`) throw Error('Verify demo URL');
-  if (p.download && (p.path !== 'vibedock' || !/^https:\/\/github\.com\/arsenaltj\/creative-hub\/releases\/tag\/vibedock-v[\d.]+$/.test(p.download))) throw Error('Verify download URL');
-  if (p.art && !['dock','pet','perf','orca'].includes(p.art)) throw Error('Unknown project artwork');
+  const downloadTags = {vibedock: /^vibedock-v[\d.]+$/, 'codex-usage-badge': /^codex-usage-badge-v\d+\.\d+\.\d+-hub\.\d+$/};
+  const releasePrefix = 'https://github.com/arsenaltj/creative-hub/releases/tag/';
+  if (p.download && (!p.download.startsWith(releasePrefix) || !downloadTags[p.path]?.test(p.download.slice(releasePrefix.length)))) throw Error('Verify download URL');
+  if (p.art && !['dock','pet','perf','orca','badge'].includes(p.art)) throw Error('Unknown project artwork');
   if (p.demo) await access(new URL(`projects/${p.path}/index.html`, root));
   seen.add(p.path);
 }
 function art(p) {
+  if (p.art === 'badge') return '<div class="badge-art" aria-hidden="true"><div class="badge-art-title">CODEX / YOUR WORKSPACE</div><div class="badge-art-quota"><span>82<small>%<br>5H REMAINING</small></span><span>64<small>%<br>WEEK REMAINING</small></span></div><div class="badge-art-row"><i></i>creative-hub <small>12 MB</small></div><div class="badge-art-thread">让用量有迹可循 <small>18.4k</small></div><div class="badge-art-row"><i></i>design-lab <small>8 MB</small></div><div class="badge-art-caption">界面示意 · 示例数据</div></div>';
   if (p.art === 'dock') return '<div class="dial" aria-hidden="true"><i>01<br>待介入</i><i>02<br>执行中</i><i>03<br>已完成</i><i>04<br>异常</i></div>';
   if (p.art === 'perf') return '<div class="perf-art" aria-hidden="true"><div class="perf-orbit"></div><div class="perf-core">GP<span>STUDIO</span></div><div class="perf-flow"><span>诊断</span><i>→</i><span>寻优</span><i>→</i><span>验证</span></div><span class="perf-caption">PRODUCT × METHOD</span></div>';
   if (p.art === 'orca') return '<div class="orca-art" aria-hidden="true"><div class="orca-orbit"></div><div class="orca-object">⬡</div><div class="orca-flow"><span>想法</span><i>→</i><span>3D</span><i>→</i><span>实物</span></div><span class="orca-caption">IDEA / FORM / OBJECT</span></div>';
   return '<div class="pet" aria-hidden="true"><div class="ears"></div><div class="face">• ᴥ •</div><span>今天也一起慢慢来。</span></div>';
 }
 const active = projects.filter(p => p.kind !== 'archive');
-const cards = active.map((p,i) => `<article class="project ${p.art || 'code'}"><div class="visual"><span class="serial">EXPERIMENT / ${String(i+1).padStart(2,'0')}</span>${p.art ? art(p) : '<div class="type-art" aria-hidden="true">3D<span>MAKE / LEARN / SHARE</span></div>'}<span class="visual-label">${p.kind === 'showcase' ? '产品展示' : p.demo ? '可交互演示' : '代码项目'}</span></div><div class="project-body"><p class="eyebrow">${esc(p.label)}</p><h3>${esc(p.name)}</h3><p class="description">${esc(p.description)}</p><p class="note">${esc(p.note)}</p><div class="actions">${p.demo ? `<a class="primary" href="${esc(p.demo)}">${p.kind === 'showcase' ? '查看展示' : '体验作品'} <span>↗</span></a>` : ''}${p.download ? `<a href="${esc(p.download)}">下载 PC 版 ↓</a>` : ''}<a href="${repo(p)}">查看源码 ↗</a></div></div></article>`).join('');
+const cards = active.map((p,i) => `<article class="project ${p.art || 'code'}"><div class="visual"><span class="serial">EXPERIMENT / ${String(i+1).padStart(2,'0')}</span>${p.art ? art(p) : '<div class="type-art" aria-hidden="true">3D<span>MAKE / LEARN / SHARE</span></div>'}<span class="visual-label">${p.kind === 'tool' ? 'Windows 桌面扩展' : p.kind === 'showcase' ? '产品展示' : p.demo ? '可交互演示' : '代码项目'}</span></div><div class="project-body"><p class="eyebrow">${esc(p.label)}</p><h3>${esc(p.name)}</h3><p class="description">${esc(p.description)}</p><p class="note">${esc(p.note)}</p><div class="actions">${p.demo ? `<a class="primary" href="${esc(p.demo)}">${p.kind === 'tool' ? '查看插件' : p.kind === 'showcase' ? '查看展示' : '体验作品'} <span>↗</span></a>` : ''}${p.download ? `<a href="${esc(p.download)}">${p.kind === 'tool' ? '下载与安装 ↓' : '下载 PC 版 ↓'}</a>` : ''}<a href="${repo(p)}">查看源码 ↗</a></div></div></article>`).join('');
 const archive = projects.filter(p => p.kind === 'archive').map(p => `<a href="${repo(p)}"><span>${esc(p.name)}</span><span aria-hidden="true">↗</span></a>`).join('');
 const template = await readFile(new URL('template.html', root), 'utf8');
 await writeFile(new URL('index.html', root), template.replace('<!-- PROJECTS -->',cards).replace('<!-- ARCHIVE -->',archive).replaceAll('<!-- COUNT -->',String(active.length).padStart(2,'0')));
-const lines = projects.map(p => `| ${p.name} | ${p.kind === 'showcase' ? '产品文档 + 架构展示' : p.path === 'gameperf' ? '研发工作台演示 + 后端源码' : p.path === 'vibedock' ? '交互演示 + PC 预览版源码' : p.demo ? '交互原型' : '代码目录'} | ${p.demo ? `[${p.kind === 'showcase' ? '展示页面' : '在线演示'}](https://arsenaltj.github.io/creative-hub/projects/${p.path}/)` : '—'} | [源码](${repo(p)}) | ${p.download ? `[Windows 预览版](${p.download})` : '—'} |`).join('\n');
+const lines = projects.map(p => `| ${p.name} | ${p.kind === 'tool' ? '第三方桌面扩展 + MIT 源码' : p.kind === 'showcase' ? '产品文档 + 架构展示' : p.path === 'gameperf' ? '研发工作台演示 + 后端源码' : p.path === 'vibedock' ? '交互演示 + PC 预览版源码' : p.demo ? '交互原型' : '代码目录'} | ${p.demo ? `[${p.kind === 'tool' ? '介绍与安装' : p.kind === 'showcase' ? '展示页面' : '在线演示'}](https://arsenaltj.github.io/creative-hub/projects/${p.path}/)` : '—'} | [源码](${repo(p)}) | ${p.download ? `[${p.kind === 'tool' ? 'Windows 维护版' : 'Windows 预览版'}](${p.download})` : '—'} |`).join('\n');
 await writeFile(new URL('README.md', root), `# 创意实验室 · Creative Hub
 
 👉 [打开统一作品集](https://arsenaltj.github.io/creative-hub/)
@@ -49,6 +52,7 @@ GamePerf 的共享 UI 在 projects/gameperf/web/。修改后运行 python projec
 - GamePerf 在线演示可以编辑；修改仅保存在访问者当前浏览器，不会写回 GitHub，也不与其他设备同步。只使用脱敏示例，及时导出 JSON。相同 Pages 来源的其他页面属于同一信任边界，不存放公司敏感数据。
 - 真机、真实 Agent、服务器登录及多人同步均未在 Pages 接入；动态链路、任务和审核演示不构成真实执行或独立验收。
 - VibeDock PC 伴侣程序源码位于 projects/vibedock/companion/，Windows 预览版在 GitHub Releases。固件、SDK、私钥、令牌与真实任务数据不在本公开仓库。原独立仓库保持不变。
+- Codex Usage Badge 保留原作者 jaykinhoo9 与 MIT 许可，Hub 维护版来源和修复见 [UPSTREAM.md](projects/codex-usage-badge/UPSTREAM.md)。Windows 一键安装器在 Releases，下载后双击运行，校验固定版本 ZIP；默认关闭上游自动更新。第三方扩展使用本机调试接口，使用与卸载说明见介绍页。
 - 源码合并与发布记录见 MIGRATION.md、projects/gameperf/docs/HUB_INTEGRATION.md；私人服务器版仍需独立部署与授权。
 `);
 console.log(`Built ${projects.length} project entries`);

@@ -1,0 +1,10 @@
+{
+  "version": "0.10.1-hub.1",
+  "upstreamVersion": "0.10.1",
+  "tag": "codex-usage-badge-v0.10.1-hub.1",
+  "release": "https://github.com/arsenaltj/creative-hub/releases/tag/codex-usage-badge-v0.10.1-hub.1",
+  "archive": "https://github.com/arsenaltj/creative-hub/releases/download/codex-usage-badge-v0.10.1-hub.1/CodexUsageBadge-Windows-0.10.1-hub.1.zip",
+  "sha256": "c1c7a69c214d1994d14032cff4ab54be800cf3fe617be4e90b4968135a17a483",
+  "installer": "https://github.com/arsenaltj/creative-hub/releases/download/codex-usage-badge-v0.10.1-hub.1/Install-CodexUsageBadge.cmd",
+  "installerSha256": "46556889816776928a485f19674af7588abcb31f7ea331254cc5ae7e5fdafdca"
+}

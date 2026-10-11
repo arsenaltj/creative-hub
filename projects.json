@@ -43,5 +43,17 @@
     "demo": "./projects/orca-prd/",
     "art": "orca",
     "path": "orca-prd"
+  },
+  {
+    "name": "Codex Usage Badge",
+    "kind": "tool",
+    "label": "AI × 桌面效率",
+    "description": "让用量有迹可循。把配额圆环、会话 Token、项目配色与文件夹大小放回 Codex 侧边栏。",
+    "note": "第三方 MIT 扩展 · Creative Hub Windows 维护版。保留原作者与修复来源；本地安装，关闭上游自动更新。",
+    "repo": "codex-usage-badge",
+    "demo": "./projects/codex-usage-badge/",
+    "download": "https://github.com/arsenaltj/creative-hub/releases/tag/codex-usage-badge-v0.10.1-hub.1",
+    "art": "badge",
+    "path": "codex-usage-badge"
   }
 ]
